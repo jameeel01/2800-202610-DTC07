@@ -1,5 +1,32 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useState } from "react";
+
+function ClickHandler() {
+  const [position, setPosition] = useState(null); // Location container
+  const map = useMapEvents({
+    click() {
+      map.locate();
+    },
+    locationfound(e) {
+      console.log(e.latlng);
+      setPosition(e.latlng); // Save Location
+    },
+  });
+
+  if (position === null) {
+    return null;
+  } else
+    <Marker position={position}>
+      <Popup>U Right Here</Popup>
+    </Marker>;
+}
 
 function LeafletMap() {
   return (
@@ -17,6 +44,7 @@ function LeafletMap() {
           A pretty CSS3 popup. <br /> Easily customizable.
         </Popup>
       </Marker>
+      <ClickHandler></ClickHandler>
     </MapContainer>
   );
 }
