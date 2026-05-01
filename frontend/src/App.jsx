@@ -4,16 +4,18 @@ import { useState } from "react";
 // import heroImg from "./assets/hero.png";
 import "./App.css";
 import Navbar from "./components/Navbar";
+import LandingPage from "./pages/landingPage";
 import { BrowserRouter } from "react-router-dom";
 
 function App() {
-  // const [count, setCount] = useState(0);
+    // const [count, setCount] = useState(0);
 
-  return (
-    <BrowserRouter>
-      <Navbar />
-    </BrowserRouter>
-  );
+    return (
+        <BrowserRouter>
+            <Navbar />
+            <LandingPage />
+        </BrowserRouter>
+    );
 }
 
 export default App;
