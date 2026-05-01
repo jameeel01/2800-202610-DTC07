@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
 .leaflet-container {
-  height: 500px;
+  height: 900px;
   width: 100%;
 }
