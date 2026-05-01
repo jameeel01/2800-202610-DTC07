@@ -5,21 +5,21 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/landingPage";
-import { BrowserRouter } from "react-router-dom";
-import LeafletMap from "./Map.jsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
 
 function App() {
-    // const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
 
-    return (
-        <BrowserRouter>
-            <Navbar />
-            <LandingPage />
-            <LeafletMap />
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
-
-
