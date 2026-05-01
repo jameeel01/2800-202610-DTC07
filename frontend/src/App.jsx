@@ -13,6 +13,16 @@ function App() {
     <BrowserRouter>
       <Navbar />
     </BrowserRouter>
+=======
+import "./App.css";
+import LeafletMap from "./Map.jsx";
+
+function App() {
+  return (
+    <>
+      <LeafletMap />
+    </>
+>>>>>>> leaflet
   );
 }
 
