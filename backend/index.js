@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const User = require("./models/User");
+const Nomination = require("./models/Nomination");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -135,6 +136,80 @@ app.post("/api/auth/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Nomination Endpoints
+app.post("/api/nominations", async (req, res) => {
+  try {
+    const {
+      latitude,
+      longitude,
+      streetAddress,
+      neighborhood,
+      nominatorId,
+      nominatorName,
+      nominatorEmail,
+      title,
+      description,
+      photoUrl,
+      category,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !latitude ||
+      !longitude ||
+      !streetAddress ||
+      !nominatorId ||
+      !nominatorName ||
+      !nominatorEmail ||
+      !title ||
+      !description ||
+      !category
+    ) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Verify category is valid
+    const validCategories = [
+      "bus stop",
+      "park",
+      "sidewalk",
+      "schoolyard",
+      "plaza",
+      "other",
+    ];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ error: "Invalid category" });
+    }
+
+    // Create new nomination
+    const newNomination = new Nomination({
+      location: {
+        latitude,
+        longitude,
+        streetAddress,
+        neighborhood,
+      },
+      nominatorId,
+      nominatorName,
+      nominatorEmail,
+      title,
+      description,
+      photoUrl: photoUrl || null,
+      category,
+    });
+
+    await newNomination.save();
+
+    res.status(201).json({
+      message: "Nomination submitted successfully",
+      nomination: newNomination,
+    });
+  } catch (error) {
+    console.error("Nomination error:", error.message);
+    res.status(500).json({ error: "Failed to create nomination" });
   }
 });
 
