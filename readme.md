@@ -1,5 +1,5 @@
 ## About Us
-Team Name: DTC-07
+Team Name: BBY-XX OR DTC-XX
 Team Members: 
 - Carlos Movilla
 - Jericho Rosell
