@@ -1,1 +1,3 @@
 my-react-app/.gitignore
+backend/.env
+.env
