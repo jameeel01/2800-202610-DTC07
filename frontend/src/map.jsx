@@ -10,22 +10,23 @@ import { useState } from "react";
 
 function ClickHandler() {
   const [position, setPosition] = useState(null); // Location container
-  const map = useMapEvents({
-    click() {
-      map.locate();
-    },
-    locationfound(e) {
-      console.log(e.latlng);
-      setPosition(e.latlng); // Save Location
+  useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
     },
   });
 
   if (position === null) {
     return null;
   } else
-    <Marker position={position}>
-      <Popup>U Right Here</Popup>
-    </Marker>;
+    return (
+      <Marker position={position}>
+        <Popup>
+          Latitude: {position.lat} <br></br>
+          Longitude: {position.lng}
+        </Popup>
+      </Marker>
+    );
 }
 
 function LeafletMap() {
