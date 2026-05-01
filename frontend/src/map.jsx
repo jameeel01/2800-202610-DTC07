@@ -23,7 +23,10 @@ function ClickHandler() {
       <Marker position={position}>
         <Popup>
           Latitude: {position.lat} <br></br>
-          Longitude: {position.lng}
+          Longitude: {position.lng} <br></br>
+          Temperature Drop: {"-2.4°C"} <br></br>
+          Number Of Plantable Trees: {"3 Trees"} <br></br>
+          Area Of Shade Coverage: {"160 m²"}
         </Popup>
       </Marker>
     );
@@ -40,11 +43,6 @@ function LeafletMap() {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[49.2827, -123.1207]}>
-        <Popup>
-          A pretty CSS3 popup. <br /> Easily customizable.
-        </Popup>
-      </Marker>
       <ClickHandler></ClickHandler>
     </MapContainer>
   );
