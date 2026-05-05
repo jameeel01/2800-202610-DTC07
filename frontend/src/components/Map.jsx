@@ -8,13 +8,12 @@ import {
 import "leaflet/dist/leaflet.css";
 import { useState } from "react";
 
-function ClickHandler({ isPinDropMode, setIsPinDropMode }) {
+function ClickHandler({ isPinDropMode }) {
   const [position, setPosition] = useState(null); // Location Container
   useMapEvents({
     click(e) {
       if (!isPinDropMode) return;
       setPosition(e.latlng);
-      setIsPinDropMode(false);
     },
   });
 
@@ -37,7 +36,7 @@ function ClickHandler({ isPinDropMode, setIsPinDropMode }) {
 function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   return (
     <div style={{ height: "calc(100vh - 80px)" }}>
-      {isPinDropMode && ( //Popup Banner
+      {isPinDropMode && ( // Popup Banner
         <div
           style={{
             position: "absolute",
@@ -45,7 +44,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1000,
-            background: "#588157",
+            background: "#111827",
             padding: "10px 20px",
             borderRadius: "8px",
             display: "flex",
@@ -55,12 +54,15 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
           }}
         >
-          <span>Tap the map to place your pin.</span>
+          <span style={{ color: "#9ca3af" }}>
+            Tap the map to place your pin. To confirm, click on the marker.
+          </span>
 
           <button
             onClick={() => setIsPinDropMode(false)}
             style={{
               background: "none",
+              color: "#9ca3af",
               border: "none",
               fontSize: "18px",
               cursor: "pointer",
