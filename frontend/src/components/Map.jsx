@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 import { useState } from "react";
 
 function ClickHandler({ isPinDropMode, setIsPinDropMode }) {
-  const [position, setPosition] = useState(null); // Location container
+  const [position, setPosition] = useState(null); // Location Container
   useMapEvents({
     click(e) {
       if (!isPinDropMode) return;
@@ -37,23 +37,59 @@ function ClickHandler({ isPinDropMode, setIsPinDropMode }) {
 function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   return (
     <div style={{ height: "calc(100vh - 80px)" }}>
-      <MapContainer
+      {isPinDropMode && ( //Popup Banner
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            background: "#588157",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            display: "flex",
+            gap: "16px",
+            alignItems: "center",
+            fontWeight: "bold",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          <span>Tap the map to place your pin.</span>
+
+          <button
+            onClick={() => setIsPinDropMode(false)}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "18px",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <MapContainer // Map Centered On Van
         center={[49.24966, -123.11934]}
         zoom={13}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%" }}
       >
-        <ClickHandler
+        <ClickHandler // Handles Click State
           isPinDropMode={isPinDropMode}
           setIsPinDropMode={setIsPinDropMode}
         />
-        <TileLayer
+
+        <TileLayer // Actual Map
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ClickHandler />
       </MapContainer>
-      <button
+
+      <button // Nomination Button
         onClick={() => setIsPinDropMode(true)}
         style={{
           position: "absolute",
