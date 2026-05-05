@@ -7,6 +7,15 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState } from "react";
+import L from "leaflet";
+import BlueMarker from "../assets/BlueMarker.svg";
+
+const bluemarker = L.icon({
+  iconUrl: BlueMarker,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
+  popupAnchor: [0, -38],
+});
 
 function ClickHandler({ isPinDropMode }) {
   const [position, setPosition] = useState(null); // Location Container
@@ -21,7 +30,7 @@ function ClickHandler({ isPinDropMode }) {
     return null;
   } else
     return (
-      <Marker position={position}>
+      <Marker position={position} icon={bluemarker}>
         <Popup>
           Latitude: {position.lat} <br></br>
           Longitude: {position.lng} <br></br>
