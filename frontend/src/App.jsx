@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ImpactEstimatePage from "./pages/ImpactEstimatePage";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/map" element={<LeafletMap />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
+                    <Route path="/nomination/:id/impact" element={<ImpactEstimatePage />} />
                 </Route>
             </Routes>
         </BrowserRouter>
