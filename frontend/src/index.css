@@ -4,3 +4,19 @@
   height: 500px;
   width: 100%;
 }
+
+/* Animation for landing page */
+
+@keyframes panLeft {
+  0% {
+    transform: translateX(0%) scale(1.0);
+  }
+
+  100% {
+    transform: translateX(-10%) scale(1.0);
+  }
+}
+
+.pan-animation {
+  animation: panLeft 20s linear infinite;
+}
