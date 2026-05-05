@@ -88,20 +88,18 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <ClickHandler />
       </MapContainer>
 
       <button // Nomination Button
         onClick={() => setIsPinDropMode(true)}
         style={{
-          position: "absolute",
-          bottom: "24px",
-          right: "16px",
+          position: "relative",
+          bottom: "70px",
+          right: "-1570px",
           zIndex: 1000,
           padding: "10px 18px",
           background: "#1a1a2e",
-          color: "white",
-          border: "2px solid #4fc3f7",
+          color: "#9ca3af",
           borderRadius: "8px",
           cursor: "pointer",
           fontWeight: "bold",
