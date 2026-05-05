@@ -19,9 +19,8 @@ function Navbar() {
           <Link
             key={to}
             to={to}
-            className={`flex flex-col items-center gap-1 text-xs ${
-              isActive ? "text-blue-400" : "text-gray-400"
-            }`}
+            className={`flex flex-col items-center gap-1 text-xs ${isActive ? "text-blue-400" : "text-gray-400"
+              }`}
           >
             <Icon size={22} />
             {label}

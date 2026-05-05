@@ -1,25 +1,27 @@
-// import { useState } from "react";
-// import reactLogo from "./assets/react.svg";
-// import viteLogo from "./assets/vite.svg";
-// import heroImg from "./assets/hero.png";
 import "./App.css";
-import Navbar from "./components/Navbar";
 import LandingPage from "./pages/landingPage";
-import { BrowserRouter } from "react-router-dom";
 import LeafletMap from "./Map.jsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import MainLayout from "./components/MainLayout";
 
 function App() {
-    // const [count, setCount] = useState(0);
-
     return (
         <BrowserRouter>
-            <Navbar />
-            <LandingPage />
-            <LeafletMap />
+            <Routes>
+                {
+                    // Pages that do not need the navbar
+                }
+                <Route path="/" element={<LandingPage />} />
+
+                {
+                    // Pages that do need the navbar
+                }
+                <Route element={<MainLayout />}>
+                    <Route path="/map" element={<LeafletMap />} />
+                </Route>
+            </Routes>
         </BrowserRouter>
     );
 }
 
 export default App;
-
-
