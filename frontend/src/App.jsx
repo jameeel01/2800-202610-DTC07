@@ -5,8 +5,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import { useState } from "react";
 
 function App() {
+  const [isPinDropMode, setIsPinDropMode] = useState(false);
   return (
     <BrowserRouter>
       <Routes>
@@ -18,8 +20,23 @@ function App() {
         {
           // Pages that do need the navbar
         }
-        <Route element={<MainLayout />}>
-          <Route path="/map" element={<LeafletMap />} />
+        <Route
+          element={
+            <MainLayout
+              isPinDropMode={isPinDropMode}
+              setIsPinDropMode={setIsPinDropMode}
+            />
+          }
+        >
+          <Route
+            path="/map"
+            element={
+              <LeafletMap
+                isPinDropMode={isPinDropMode}
+                setIsPinDropMode={setIsPinDropMode}
+              />
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Route>
