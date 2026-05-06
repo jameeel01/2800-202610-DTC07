@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const User = require("./models/User");
+const { connectDB } = require("./utils");
 
 async function testUserSchema() {
   try {
     // Connection
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Connected to MongoDB");
+    await connectDB();
 
     const testUser = new User({
       name: "John Doe",

@@ -1,31 +1,27 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const cors = require("cors");
 require("dotenv").config();
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
+const {
+  connectDB,
+  generateToken,
+  formatUserResponse,
+  verifyToken,
+  isValidLatLng,
+} = require("./utils");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
-const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_this";
 
-// MongoDB setup with Mongoose
-async function connectDB() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB connected successfully");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
-  }
-}
-
-// Middleware
+// middleware & cors
 app.use(express.json());
+app.use(cors());
 
-// Basic Routes
+// basic routes
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the API server!" });
 });
@@ -40,28 +36,28 @@ app.get("/api/health", (req, res) => {
 //   res.json({ received: data, message: "Data received successfully" });
 // });
 
-// Auth Endpoints
+// auth routes
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate input
+    // check fields exist
     if (!name || !email || !password) {
       return res
         .status(400)
         .json({ error: "Name, email, and password are required" });
     }
 
-    // Check if user already exists
+    // check email not taken
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Hash password
+    // hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Create new user
+    // create user
     const newUser = new User({
       name,
       email,
@@ -70,23 +66,13 @@ app.post("/api/auth/register", async (req, res) => {
 
     await newUser.save();
 
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: newUser._id, email: newUser.email },
-      JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    // generate token
+    const token = generateToken(newUser._id, newUser.email);
 
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-      },
+      user: formatUserResponse(newUser),
     });
   } catch (error) {
     console.error("Register error:", error.message);
@@ -98,40 +84,30 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+    // check fields exist
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    // Find user by email
+    // find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Check password
+    // verify password
     const passwordMatch = await bcryptjs.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    // generate token
+    const token = generateToken(user._id, user.email);
 
     res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     console.error("Login error:", error.message);
@@ -139,10 +115,10 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Nomination Endpoints
-app.post("/api/nominations", async (req, res) => {
+// nomination routes (create)
+app.post("/api/nominations", verifyToken, async (req, res) => {
   try {
-    const {
+    let {
       latitude,
       longitude,
       streetAddress,
@@ -156,7 +132,15 @@ app.post("/api/nominations", async (req, res) => {
       category,
     } = req.body;
 
-    // Validate required fields
+    // trim all strings
+    streetAddress = streetAddress?.trim();
+    neighborhood = neighborhood?.trim();
+    nominatorName = nominatorName?.trim();
+    nominatorEmail = nominatorEmail?.trim();
+    title = title?.trim();
+    description = description?.trim();
+
+    // check required fields
     if (
       !latitude ||
       !longitude ||
@@ -171,7 +155,23 @@ app.post("/api/nominations", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Verify category is valid
+    // parse & validate lat/lng are numbers
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (isNaN(lat) || isNaN(lng)) {
+      return res
+        .status(400)
+        .json({ error: "Latitude and longitude must be valid numbers" });
+    }
+
+    // check within vancouver bounds
+    if (!isValidLatLng(lat, lng)) {
+      return res.status(400).json({
+        error: "Location must be within Vancouver city boundaries",
+      });
+    }
+
+    // validate category
     const validCategories = [
       "bus stop",
       "park",
@@ -184,11 +184,11 @@ app.post("/api/nominations", async (req, res) => {
       return res.status(400).json({ error: "Invalid category" });
     }
 
-    // Create new nomination
+    // save nomination
     const newNomination = new Nomination({
       location: {
-        latitude,
-        longitude,
+        latitude: lat,
+        longitude: lng,
         streetAddress,
         neighborhood,
       },
@@ -209,7 +209,54 @@ app.post("/api/nominations", async (req, res) => {
     });
   } catch (error) {
     console.error("Nomination error:", error.message);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: "A nomination already exists for this location from this user",
+      });
+    }
     res.status(500).json({ error: "Failed to create nomination" });
+  }
+});
+
+// get all nominations (filter by neighborhood)
+app.get("/api/nominations", async (req, res) => {
+  try {
+    const { neighborhood } = req.query;
+
+    let filter = {};
+    if (neighborhood) {
+      filter["location.neighborhood"] = neighborhood;
+    }
+
+    const nominations = await Nomination.find(filter).sort({ createdAt: -1 });
+
+    res.json(nominations);
+  } catch (error) {
+    console.error("Get nominations error:", error.message);
+    res.status(500).json({ error: "Failed to retrieve nominations" });
+  }
+});
+
+// get single nomination by id
+app.get("/api/nominations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // validate mongodb objectid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid nomination ID" });
+    }
+
+    const nomination = await Nomination.findById(id);
+
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    res.json(nomination);
+  } catch (error) {
+    console.error("Get nomination error:", error.message);
+    res.status(500).json({ error: "Failed to retrieve nomination" });
   }
 });
 
@@ -222,12 +269,12 @@ app.get("/api/users", (req, res) => {
   });
 });
 
-// 404 handler
+// 404 catch-all
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Start server after DB connection
+// start server after db connect
 async function startServer() {
   await connectDB();
   app.listen(PORT, () => {
