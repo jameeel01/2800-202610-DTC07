@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/Shaded.png";
 
 function Signup() {
   const [fullName, setFullName] = useState("");
@@ -11,13 +12,13 @@ function Signup() {
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
       {/* top navbar */}
       <div className="w-full bg-[#2d5a27] px-6 py-3 flex justify-between items-center">
-        <span className="text-white font-semibold text-lg">Shaded</span>
+        <img src={logo} alt="Shaded logo" className="h-12" />
         <Link to="/login" className="text-white text-sm">
           Log In
         </Link>
       </div>
 
-      {/* page content — centered narrow column like mobile wireframe */}
+      {/* cetered page content */}
       <div className="flex flex-col flex-1 px-6 py-6 max-w-sm w-full mx-auto">
         {/* back button */}
         <button
@@ -90,7 +91,7 @@ function Signup() {
             />
           </div>
 
-          {/* submit button */}
+          {/* create account button */}
           <button className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2">
             Create Account
           </button>
