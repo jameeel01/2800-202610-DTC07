@@ -1,9 +1,11 @@
 import { useMap } from "react-leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import "leaflet.heat";
 
 function HeatmapLayer() {
   const map = useMap();
+  const [showHeatMap, setShowHeatMap] = useState(true);
+  const heatLayerRef = useRef(null);
 
   useEffect(() => {
     const points = [
@@ -25,11 +27,43 @@ function HeatmapLayer() {
     });
 
     heat.addTo(map); //Add heatmap to map when it mounts (gets created)
+    heatLayerRef.current = heat;
 
     return () => map.removeLayer(heat); // remove heatmap when it unmounts (gets destroyed)
   }, [map]); //when map is ready, run it
 
-  return null;
+  useEffect(() => {
+    if (!heatLayerRef.current) return;
+    if (showHeatMap) {
+      heatLayerRef.current.addTo(map);
+    } else {
+      map.removeLayer(heatLayerRef.current);
+    }
+  }, [showHeatMap, map]);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "24px",
+        left: "16px",
+        zIndex: 1000,
+      }}
+    >
+      <button
+        onClick={() => setShowHeatMap((prev) => !prev)} // Flip boolean
+        style={{
+          padding: "10px 18px",
+          background: "#1a1a2e",
+          color: "#9ca3af",
+          borderRadius: "8px",
+          fontWeight: "bold",
+        }}
+      >
+        {showHeatMap ? "Hide Heatmap" : "Show Heatmap"}
+      </button>
+    </div>
+  );
 }
 
 export default HeatmapLayer;
