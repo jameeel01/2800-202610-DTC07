@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import { useState } from "react";
 import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
+import HeatmapLayer from "./HeatMapLayer";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -83,7 +84,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       )}
 
       <MapContainer // Map Centered On Van
-        center={[49.24966, -123.11934]}
+        center={[49.2827, -123.1207]}
         zoom={13}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%" }}
@@ -92,6 +93,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           isPinDropMode={isPinDropMode}
           setIsPinDropMode={setIsPinDropMode}
         />
+
+        <HeatmapLayer></HeatmapLayer>
 
         <TileLayer // Actual Map
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
