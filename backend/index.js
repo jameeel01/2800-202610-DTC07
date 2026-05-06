@@ -1,26 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
+const { connectDB, generateToken, formatUserResponse } = require("./utils");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
-const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_this";
-
-// MongoDB setup with Mongoose
-async function connectDB() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB connected successfully");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
-  }
-}
 
 // Middleware
 app.use(express.json());
@@ -71,22 +59,12 @@ app.post("/api/auth/register", async (req, res) => {
     await newUser.save();
 
     // Create JWT token
-    const token = jwt.sign(
-      { userId: newUser._id, email: newUser.email },
-      JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    const token = generateToken(newUser._id, newUser.email);
 
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-      },
+      user: formatUserResponse(newUser),
     });
   } catch (error) {
     console.error("Register error:", error.message);
@@ -116,22 +94,12 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     // Create JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    const token = generateToken(user._id, user.email);
 
     res.json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: formatUserResponse(user),
     });
   } catch (error) {
     console.error("Login error:", error.message);
