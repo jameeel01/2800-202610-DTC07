@@ -2,12 +2,21 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
 require("dotenv").config();
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
 
 const app = express();
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean),
+  credentials: true,
+}));
 const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_this";
 
