@@ -7,7 +7,7 @@ import NominateButton from "./NominateButton";
 
 function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   return (
-    <div style={{ height: "calc(100vh - 80px)" }}>
+    <div style={{ position: "relative", height: "calc(100vh - 80px)" }}>
       <MapContainer // Map Centered On Van
         center={[49.2827, -123.1207]}
         zoom={13}
@@ -19,7 +19,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           setIsPinDropMode={setIsPinDropMode}
         />
 
-        <PinDropBanner
+        <PinDropBanner // Popup Banner When In Nominate Mode
           isPinDropMode={isPinDropMode}
           setIsPinDropMode={setIsPinDropMode}
         ></PinDropBanner>
