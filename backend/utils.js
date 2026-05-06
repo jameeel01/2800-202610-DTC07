@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_change_this";
 
-// Connect to MongoDB
+// connect to mongodb
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
@@ -14,14 +14,14 @@ async function connectDB() {
   }
 }
 
-// Generate JWT token
+// create jwt token
 function generateToken(userId, email) {
   return jwt.sign({ userId, email }, JWT_SECRET, {
     expiresIn: "7d",
   });
 }
 
-// Format user response object
+// format user response object
 function formatUserResponse(user) {
   return {
     id: user._id,
@@ -30,8 +30,45 @@ function formatUserResponse(user) {
   };
 }
 
+// verify jwt in authorization header
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Token missing or invalid" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Token missing or invalid" });
+  }
+}
+
+// vancouver city bounds (approx)
+const VANCOUVER_BOUNDS = {
+  minLat: 49.19,
+  maxLat: 49.32,
+  minLng: -123.25,
+  maxLng: -123.07,
+};
+
+// check if coords are within vancouver
+function isValidLatLng(latitude, longitude) {
+  return (
+    latitude >= VANCOUVER_BOUNDS.minLat &&
+    latitude <= VANCOUVER_BOUNDS.maxLat &&
+    longitude >= VANCOUVER_BOUNDS.minLng &&
+    longitude <= VANCOUVER_BOUNDS.maxLng
+  );
+}
+
 module.exports = {
   connectDB,
   generateToken,
   formatUserResponse,
+  verifyToken,
+  isValidLatLng,
 };
