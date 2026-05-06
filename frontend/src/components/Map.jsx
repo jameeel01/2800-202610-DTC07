@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   MapContainer,
   TileLayer,
@@ -292,6 +293,20 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
 
       <MapContainer
         center={[49.24966, -123.11934]}
+=======
+import { MapContainer, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import HeatmapLayer from "./HeatMapLayer";
+import ClickHandler from "./ClickHandler";
+import PinDropBanner from "./PinDropBanner";
+import NominateButton from "./NominateButton";
+
+function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
+  return (
+    <div style={{ position: "relative", height: "calc(100vh - 80px)" }}>
+      <MapContainer // Map Centered On Van
+        center={[49.2827, -123.1207]}
+>>>>>>> heat_map
         zoom={13}
         scrollWheelZoom={false}
         style={{ flex: 1, height: "100%" }}
@@ -301,7 +316,18 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           onPinPlaced={handlePinPlaced}
           onPanelClose={handlePanelClose}
         />
+<<<<<<< HEAD
         <TileLayer
+=======
+
+        <PinDropBanner // Popup Banner When In Nominate Mode
+          isPinDropMode={isPinDropMode}
+          setIsPinDropMode={setIsPinDropMode}
+        ></PinDropBanner>
+        <HeatmapLayer></HeatmapLayer>
+
+        <TileLayer // Actual Map
+>>>>>>> heat_map
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
@@ -316,6 +342,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           />
         ))}
       </MapContainer>
+<<<<<<< HEAD
 
       {activePin && (
         <NominationPanel
@@ -347,6 +374,9 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           Nominate +
         </button>
       )}
+=======
+      <NominateButton setIsPinDropMode={setIsPinDropMode}></NominateButton>
+>>>>>>> heat_map
     </div>
   );
 }
