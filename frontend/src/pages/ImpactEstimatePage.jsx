@@ -42,7 +42,7 @@ function ImpactEstimatePage() {
       {/* Heading */}
       <h1 className="text-3xl font-bold text-gray-900">Impact Estimate</h1>
       <p className="text-sm text-[#2d5a27] mt-1 mb-8">
-        {nomination.title} — {trees} {trees === 1 ? "tree" : "trees"}
+        {nomination.title} ({trees} {trees === 1 ? "tree" : "trees"})
       </p>
 
       {/* Stat cards */}
