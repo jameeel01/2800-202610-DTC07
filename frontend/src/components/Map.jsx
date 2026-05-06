@@ -1,14 +1,9 @@
-<<<<<<< HEAD
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMapEvents,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState } from "react";
 import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
+import HeatmapLayer from "./HeatMapLayer";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -55,39 +50,54 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   };
 
   return (
-    <div style={{
-      width: "300px",
-      background: "#dad7cd",
-      display: "flex",
-      flexDirection: "column",
-      fontFamily: "sans-serif",
-      borderLeft: "1px solid #b5d48a",
-    }}>
-
+    <div
+      style={{
+        width: "300px",
+        background: "#dad7cd",
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "sans-serif",
+        borderLeft: "1px solid #b5d48a",
+      }}
+    >
       {
         // Title of the pin (currently coordinates)
       }
       <div style={{ padding: "20px 20px 0" }}>
-        <h2 style={{
-          margin: "0 0 4px",
-          fontSize: "16px",
-          fontWeight: "700",
-          color: "#1a3a0f",
-          textDecoration: "underline",
-          wordBreak: "break-word",
-        }}>
+        <h2
+          style={{
+            margin: "0 0 4px",
+            fontSize: "16px",
+            fontWeight: "700",
+            color: "#1a3a0f",
+            textDecoration: "underline",
+            wordBreak: "break-word",
+          }}
+        >
           {pin.label}
         </h2>
 
         {
           // Location pinned text and svg
         }
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            marginBottom: "20px",
+          }}
+        >
           <svg width="12" height="16" viewBox="0 0 12 16" fill="none">
-            <path d="M6 0C2.686 0 0 2.686 0 6c0 4.5 6 10 6 10s6-5.5 6-10C12 2.686 9.314 0 6 0z" fill="#17C0E3" />
+            <path
+              d="M6 0C2.686 0 0 2.686 0 6c0 4.5 6 10 6 10s6-5.5 6-10C12 2.686 9.314 0 6 0z"
+              fill="#17C0E3"
+            />
             <circle cx="6" cy="6" r="2" fill="white" />
           </svg>
-          <span style={{ fontSize: "13px", color: "#3a7d1e", fontWeight: "500" }}>
+          <span
+            style={{ fontSize: "13px", color: "#3a7d1e", fontWeight: "500" }}
+          >
             Location pinned
           </span>
         </div>
@@ -116,11 +126,17 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         />
       </div>
 
-
       {
         // Submit Button
       }
-      <div style={{ padding: "0 20px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div
+        style={{
+          padding: "0 20px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
         <button
           onClick={() => onSubmit({ pin, locationName, reason })}
           style={{
@@ -137,7 +153,6 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         >
           Submit Nomination
         </button>
-
 
         {
           // Cancel Button
@@ -157,7 +172,6 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         >
           Cancel
         </button>
-
 
         {
           // Remove Pin Button
@@ -206,8 +220,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const handleSubmit = ({ pin, locationName, reason }) => {
     setPins((prev) =>
       prev.map((p) =>
-        p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p
-      )
+        p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
+      ),
     );
     setActivePin(null);
     setIsPinDropMode(false);
@@ -230,49 +244,58 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   };
 
   return (
-    <div style={{ height: "calc(100vh - 80px)", display: "flex", position: "relative" }}>
-
+    <div
+      style={{
+        height: "calc(100vh - 80px)",
+        display: "flex",
+        position: "relative",
+      }}
+    >
       {notification && (
-        <div style={{
-          position: "absolute",
-          top: "16px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1001,
-          background: "#2d6a0f",
-          color: "white",
-          padding: "10px 20px",
-          borderRadius: "8px",
-          fontWeight: "600",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          whiteSpace: "nowrap",
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1001,
+            background: "#2d6a0f",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            whiteSpace: "nowrap",
+          }}
+        >
           ✓ {notification}
         </div>
       )}
 
       {/* Pin drop banner */}
       {isPinDropMode && !activePin && (
-        <div style={{
-          position: "absolute",
-          top: "16px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1000,
-          background: "#111827",
-          padding: "10px 20px",
-          borderRadius: "8px",
-          display: "flex",
-          gap: "16px",
-          alignItems: "center",
-          fontWeight: "bold",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-          whiteSpace: "nowrap",
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            background: "#111827",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            display: "flex",
+            gap: "16px",
+            alignItems: "center",
+            fontWeight: "bold",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            whiteSpace: "nowrap",
+          }}
+        >
           <span style={{ color: "#9ca3af" }}>
             Tap the map to place your pin.
           </span>
@@ -316,8 +339,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             }}
           />
         ))}
+        <HeatmapLayer></HeatmapLayer>
       </MapContainer>
-<<<<<<< HEAD
 
       {activePin && (
         <NominationPanel
