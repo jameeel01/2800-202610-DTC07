@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/Shaded.png";
 
 function Signup() {
@@ -7,6 +7,45 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignup = async () => {
+    setError("");
+    if (!fullName || !email || !password || !confirmPassword)
+      return setError("Please fill in all fields.");
+    if (password !== confirmPassword)
+      return setError("Passwords do not match.");
+    if (password.length < 6)
+      return setError("Password must be at least 6 characters.");
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: fullName, email, password }),
+      });
+
+      const data = await res.json();
+      console.log("Response status:", res.status);
+      console.log("Response data:", data);
+      if (!res.ok) {
+        setError(data.error || "Signup failed.");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/");
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
@@ -18,7 +57,7 @@ function Signup() {
         </Link>
       </div>
 
-      {/* cetered page content */}
+      {/* centered page content */}
       <div className="flex flex-col flex-1 px-6 py-6 max-w-sm w-full mx-auto">
         {/* back button */}
         <button
@@ -91,9 +130,16 @@ function Signup() {
             />
           </div>
 
+          {/* error message */}
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+
           {/* create account button */}
-          <button className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2">
-            Create Account
+          <button
+            onClick={handleSignup}
+            disabled={loading}
+            className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2 disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Create Account"}
           </button>
         </div>
 

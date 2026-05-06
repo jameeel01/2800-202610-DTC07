@@ -1,10 +1,38 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/Shaded.png";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    setError("");
+    if (!email || !password) return setError("Please fill in all fields.");
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return setError(data.error || "Login failed.");
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/");
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
@@ -60,9 +88,16 @@ function Login() {
             />
           </div>
 
+          {/* error message */}
+          {error && <p className="text-red-500 text-xs">{error}</p>}
+
           {/* submit button */}
-          <button className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2">
-            Log In
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2 disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Log In"}
           </button>
         </div>
 
