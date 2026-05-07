@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import StatCard from "../components/StatCard";
 import StarRating from "../components/StarRating";
 import {
@@ -9,24 +10,87 @@ import {
   calculateCommunityStars,
 } from "../utils/shadeCalc";
 
-// Mock nomination to be replaced GET /api/nominations/:id
-const MOCK_NOMINATION = {
-  title: "Riley Park",
-  upvoteCount: 42,
-};
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function ImpactEstimatePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Mock nomination to be replaced GET /api/nominations/:id
-  const nomination = MOCK_NOMINATION;
+  const [nomination, setNomination] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [impact, setImpact] = useState({
+    trees: 0,
+    temp: 0,
+    shade: 0,
+    co2: 0,
+    stars: 0,
+  });
 
+<<<<<<< HEAD
   const trees = calculateTreeCount(nomination.upvoteCount);
   const temp = calculateTempReduction(trees);
   const shade = calculateShadeArea(trees);
   const co2 = calculateCO2(trees);
   const stars = calculateCommunityStars(nomination.upvoteCount);
+=======
+  useEffect(() => {
+    async function fetchNominationAndCalculateImpact() {
+      try {
+        setLoading(true);
+        // Fetch nomination data
+        const response = await fetch(`${BACKEND_URL}/api/nominations/${id}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch nomination: ${response.status}`);
+        }
+        const nominationData = await response.json();
+        setNomination(nominationData);
+
+        // Calculate impact based on upvote count
+        const trees = calculateTreeCount(nominationData.upvoteCount);
+        const temp = calculateTempReduction(trees);
+        const shade = calculateShadeArea(trees);
+        const co2 = calculateCO2(trees);
+        const stars = calculateCommunityStars(nominationData.upvoteCount);
+
+        setImpact({ trees, temp, shade, co2, stars });
+      } catch (err) {
+        console.error("Failed to load nomination:", err);
+        setError("Failed to load nomination. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) {
+      fetchNominationAndCalculateImpact();
+    }
+  }, [id]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f0f7f0] px-4 py-6 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !nomination) {
+    return (
+      <div className="min-h-screen bg-[#f0f7f0] px-4 py-6 flex items-center justify-center">
+        <div className="text-gray-500">Loading nomination...</div>
+      </div>
+    );
+  }
+>>>>>>> 1cd1d97f1c69dd0397c1b102ab20b6046674c40d
 
   return (
     <div className="min-h-screen bg-[#f0f7f0] px-4 py-6">
@@ -41,28 +105,29 @@ function ImpactEstimatePage() {
       {/* Heading */}
       <h1 className="text-3xl font-bold text-gray-900">Impact Estimate</h1>
       <p className="text-sm text-[#2d5a27] mt-1 mb-8">
-        {nomination.title} with {trees} {trees === 1 ? "tree" : "trees"}
+        {nomination.title} with {impact.trees}{" "}
+        {impact.trees === 1 ? "tree" : "trees"}
       </p>
 
       {/* Stat cards */}
       <div className="flex flex-col gap-4">
         <StatCard
-          value={`${temp}°C`}
+          value={`${impact.temp}°C`}
           label="Temperature Reduction"
           subtext="Within 50m radius"
         />
         <StatCard
-          value={`${shade} m²`}
+          value={`${impact.shade} m²`}
           label="Shade Coverage"
           subtext="During peak sun"
         />
         <StatCard
-          value={`${co2} kg/yr`}
+          value={`${impact.co2} kg/yr`}
           label="CO2 Absorption"
           subtext="Annual carbon absorbed"
         />
         <StatCard label="Community Impact" subtext="Upvotes & proximity">
-          <StarRating stars={stars} />
+          <StarRating stars={impact.stars} />
         </StatCard>
       </div>
 

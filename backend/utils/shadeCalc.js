@@ -71,4 +71,60 @@ module.exports = {
   calculateShadowCoverage,
   getCanopyCategory,
   formatShadeResponse,
+  calculateTreeCount,
+  calculateTempReduction,
+  calculateShadeArea,
+  calculateCO2,
+  calculateCommunityStars,
 };
+
+/**
+ * Calculate estimated tree count based on upvote count
+ * @param {number} upvoteCount - Number of upvotes
+ * @returns {number} Estimated tree count
+ */
+function calculateTreeCount(upvoteCount) {
+  // Estimate: ~5 trees per 10 upvotes
+  return Math.ceil((upvoteCount / 10) * 5);
+}
+
+/**
+ * Calculate temperature reduction impact
+ * @param {number} treeCount - Number of trees
+ * @returns {number} Temperature reduction in degrees Celsius
+ */
+function calculateTempReduction(treeCount) {
+  // Estimate: ~0.3°C per tree within 50m radius
+  return Math.round(treeCount * 0.3 * 10) / 10;
+}
+
+/**
+ * Calculate shade area coverage
+ * @param {number} treeCount - Number of trees
+ * @returns {number} Shade area in square meters
+ */
+function calculateShadeArea(treeCount) {
+  // Estimate: ~150 m² per mature tree during peak sun
+  return Math.round(treeCount * 150);
+}
+
+/**
+ * Calculate CO2 sequestration impact
+ * @param {number} treeCount - Number of trees
+ * @returns {number} CO2 sequestered in kg per year
+ */
+function calculateCO2(treeCount) {
+  // Estimate: ~21 kg CO2/tree/year
+  return Math.round(treeCount * 21);
+}
+
+/**
+ * Calculate community stars based on upvote count
+ * @param {number} upvoteCount - Number of upvotes
+ * @returns {number} Community star rating (0-5)
+ */
+function calculateCommunityStars(upvoteCount) {
+  // Scale: 1 star at 10 upvotes, 5 stars at 100+ upvotes
+  const stars = Math.min(5, Math.max(1, Math.ceil(upvoteCount / 20)));
+  return stars;
+}
