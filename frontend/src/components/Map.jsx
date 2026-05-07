@@ -249,6 +249,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       style={{
         display: "flex",
         position: "relative",
+        zIndex: 0,
       }}
     >
       {notification && (
