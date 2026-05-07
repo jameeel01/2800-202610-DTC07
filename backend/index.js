@@ -12,6 +12,7 @@ const {
   formatUserResponse,
   verifyToken,
   isValidLatLng,
+  calculateDistance,
 } = require("./utils");
 
 const app = express();
@@ -234,6 +235,48 @@ app.get("/api/nominations", async (req, res) => {
   } catch (error) {
     console.error("Get nominations error:", error.message);
     res.status(500).json({ error: "Failed to retrieve nominations" });
+  }
+});
+
+// get nominations nearby by lat/lng, sorted by distance
+app.get("/api/nominations/nearby", async (req, res) => {
+  try {
+    const { lat, lng } = req.query;
+
+    // validate lat/lng provided
+    if (lat === undefined || lng === undefined) {
+      return res
+        .status(400)
+        .json({ error: "latitude and longitude query params required" });
+    }
+
+    // parse coords
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    if (isNaN(userLat) || isNaN(userLng)) {
+      return res.status(400).json({ error: "Invalid latitude or longitude" });
+    }
+
+    // get all nominations
+    const nominations = await Nomination.find();
+
+    // calculate distance for each and sort
+    const withDistance = nominations
+      .map((nom) => ({
+        ...nom.toObject(),
+        distance: calculateDistance(
+          userLat,
+          userLng,
+          nom.location.latitude,
+          nom.location.longitude,
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+
+    res.json(withDistance);
+  } catch (error) {
+    console.error("Get nearby nominations error:", error.message);
+    res.status(500).json({ error: "Failed to retrieve nearby nominations" });
   }
 });
 
