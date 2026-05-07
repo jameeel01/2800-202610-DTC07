@@ -27,13 +27,6 @@ function ImpactEstimatePage() {
     stars: 0,
   });
 
-<<<<<<< HEAD
-  const trees = calculateTreeCount(nomination.upvoteCount);
-  const temp = calculateTempReduction(trees);
-  const shade = calculateShadeArea(trees);
-  const co2 = calculateCO2(trees);
-  const stars = calculateCommunityStars(nomination.upvoteCount);
-=======
   useEffect(() => {
     async function fetchNominationAndCalculateImpact() {
       try {
@@ -90,7 +83,6 @@ function ImpactEstimatePage() {
       </div>
     );
   }
->>>>>>> 1cd1d97f1c69dd0397c1b102ab20b6046674c40d
 
   return (
     <div className="min-h-screen bg-[#f0f7f0] px-4 py-6">

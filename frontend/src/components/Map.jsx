@@ -4,6 +4,7 @@ import { useState } from "react";
 import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
+import StreetTreesLayer from "./StreetTreeLayer";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -339,6 +340,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             }}
           />
         ))}
+        <StreetTreesLayer></StreetTreesLayer>
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
