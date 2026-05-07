@@ -5,8 +5,7 @@
  * Backend aggregates data from Vancouver Open Data public-trees dataset.
  */
 
-const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 /**
  * Fetch shade data from backend
