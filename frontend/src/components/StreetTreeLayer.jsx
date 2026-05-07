@@ -15,6 +15,7 @@ function StreetTreesLayer() {
   const [trees, setTrees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showTrees, setShowTrees] = useState(true);
 
   useEffect(() => {
     fetchShadeData()
@@ -32,16 +33,49 @@ function StreetTreesLayer() {
   if (loading) return null;
   if (error) return null;
 
-  return trees.map((tree, index) => {
-    const lat = tree.latitude;
-    const lng = tree.longitude;
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "70px",
+          left: "16px",
+          zIndex: 1000,
+        }}
+      >
+        <button
+          onClick={() => setShowTrees((prev) => !prev)}
+          style={{
+            padding: "10px 18px",
+            background: "#1a1a2e",
+            color: "#9ca3af",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          {showTrees ? "Hide Trees" : "Show Trees"}
+        </button>
+      </div>
+      {showTrees &&
+        !loading &&
+        !error &&
+        trees.map((tree, index) => {
+          const lat = tree.latitude;
+          const lng = tree.longitude;
 
-    if (!lat || !lng || lat === 0 || lng === 0) return null;
+          if (!lat || !lng || lat === 0 || lng === 0) return null;
 
-    return (
-      <Marker key={index} position={[lat, lng]} icon={treeMarker}></Marker>
-    );
-  });
+          return (
+            <Marker
+              key={index}
+              position={[lat, lng]}
+              icon={treeMarker}
+            ></Marker>
+          );
+        })}
+    </>
+  );
 }
 
 export default StreetTreesLayer;
