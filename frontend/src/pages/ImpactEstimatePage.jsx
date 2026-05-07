@@ -19,6 +19,7 @@ function ImpactEstimatePage() {
   const [nomination, setNomination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [location, setLocation] = useState(null);
   const [impact, setImpact] = useState({
     trees: 0,
     temp: 0,
@@ -38,6 +39,16 @@ function ImpactEstimatePage() {
         }
         const nominationData = await response.json();
         setNomination(nominationData);
+
+        // Extract location coordinates for StreetTreeLayer
+        if (nominationData.location) {
+          setLocation({
+            latitude: nominationData.location.latitude,
+            longitude: nominationData.location.longitude,
+            streetAddress: nominationData.location.streetAddress,
+            neighborhood: nominationData.location.neighborhood,
+          });
+        }
 
         // Calculate impact based on upvote count
         const trees = calculateTreeCount(nominationData.upvoteCount);
@@ -96,10 +107,20 @@ function ImpactEstimatePage() {
 
       {/* Heading */}
       <h1 className="text-3xl font-bold text-gray-900">Impact Estimate</h1>
-      <p className="text-sm text-[#2d5a27] mt-1 mb-8">
+      <p className="text-sm text-[#2d5a27] mt-1 mb-2">
         {nomination.title} with {impact.trees}{" "}
         {impact.trees === 1 ? "tree" : "trees"}
       </p>
+      {location && (
+        <p className="text-xs text-gray-600 mb-8">
+          {location.streetAddress}
+          {location.latitude && location.longitude && (
+            <span className="ml-2">
+              ({location.latitude.toFixed(4)}, {location.longitude.toFixed(4)})
+            </span>
+          )}
+        </p>
+      )}
 
       {/* Stat cards */}
       <div className="flex flex-col gap-4">
