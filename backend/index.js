@@ -14,7 +14,14 @@ const {
   isValidLatLng,
   calculateDistance,
 } = require("./utils/utils");
-const { formatShadeResponse } = require("./utils/shadeCalc");
+const {
+  formatShadeResponse,
+  calculateTreeCount,
+  calculateTempReduction,
+  calculateShadeArea,
+  calculateCO2,
+  calculateCommunityStars,
+} = require("./utils/shadeCalc");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -290,6 +297,37 @@ app.get("/api/shade-data", async (req, res) => {
   } catch (error) {
     console.error("Shade data fetch error:", error.message);
     res.status(500).json({ error: "Failed to retrieve shade data" });
+  }
+});
+
+// calculate impact based on upvote count
+app.get("/api/impact/:upvotes", (req, res) => {
+  try {
+    const upvotes = parseInt(req.params.upvotes, 10);
+
+    if (isNaN(upvotes) || upvotes < 0) {
+      return res
+        .status(400)
+        .json({ error: "Upvotes must be a non-negative number" });
+    }
+
+    const treeCount = calculateTreeCount(upvotes);
+    const tempReduction = calculateTempReduction(treeCount);
+    const shadeArea = calculateShadeArea(treeCount);
+    const co2 = calculateCO2(treeCount);
+    const stars = calculateCommunityStars(upvotes);
+
+    res.json({
+      upvotes,
+      treeCount,
+      tempReduction,
+      shadeArea,
+      co2,
+      stars,
+    });
+  } catch (error) {
+    console.error("Impact calculation error:", error.message);
+    res.status(500).json({ error: "Failed to calculate impact" });
   }
 });
 
