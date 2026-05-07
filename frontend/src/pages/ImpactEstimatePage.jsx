@@ -23,14 +23,13 @@ function ImpactEstimatePage() {
   const nomination = MOCK_NOMINATION;
 
   const trees = calculateTreeCount(nomination.upvoteCount);
-  const temp  = calculateTempReduction(trees);
+  const temp = calculateTempReduction(trees);
   const shade = calculateShadeArea(trees);
-  const co2   = calculateCO2(trees);
+  const co2 = calculateCO2(trees);
   const stars = calculateCommunityStars(nomination.upvoteCount);
 
   return (
     <div className="min-h-screen bg-[#f0f7f0] px-4 py-6">
-
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -71,7 +70,6 @@ function ImpactEstimatePage() {
       <p className="text-xs text-gray-400 mt-8 text-center">
         Source: City of Vancouver Urban Forestry Strategy
       </p>
-
     </div>
   );
 }
