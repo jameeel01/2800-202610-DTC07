@@ -245,8 +245,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
 
   return (
     <div
+      className="map-wrapper"
       style={{
-        height: "calc(100vh - 80px)",
         display: "flex",
         position: "relative",
       }}

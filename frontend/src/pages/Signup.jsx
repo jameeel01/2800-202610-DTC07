@@ -50,7 +50,7 @@ function Signup() {
   return (
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
       {/* top navbar */}
-      <div className="w-full bg-[#2d5a27] px-6 py-3 flex justify-between items-center">
+      <div className="hidden sm:flex lg:w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
         <img src={logo} alt="Shaded logo" className="h-12" />
         <Link to="/login" className="text-white text-sm">
           Log In
