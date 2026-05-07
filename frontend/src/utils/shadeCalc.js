@@ -41,3 +41,71 @@ export async function initShadeData(setCallback) {
     return null;
   }
 }
+
+/**
+ * Calculate estimated tree count based on upvote count
+ * @param {number} upvoteCount - Number of upvotes
+ * @returns {Promise<number>} Estimated tree count
+ */
+export async function calculateTreeCount(upvoteCount) {
+  const impact = await fetchImpactCalculations(upvoteCount);
+  return impact.treeCount;
+}
+
+/**
+ * Calculate temperature reduction impact
+ * @param {number} treeCount - Number of trees
+ * @returns {Promise<number>} Temperature reduction in degrees Celsius
+ */
+export async function calculateTempReduction(treeCount) {
+  const impact = await fetchImpactCalculations(treeCount);
+  return impact.tempReduction;
+}
+
+/**
+ * Calculate shade area coverage
+ * @param {number} treeCount - Number of trees
+ * @returns {Promise<number>} Shade area in square meters
+ */
+export async function calculateShadeArea(treeCount) {
+  const impact = await fetchImpactCalculations(treeCount);
+  return impact.shadeArea;
+}
+
+/**
+ * Calculate CO2 sequestration impact
+ * @param {number} treeCount - Number of trees
+ * @returns {Promise<number>} CO2 sequestered in kg per year
+ */
+export async function calculateCO2(treeCount) {
+  const impact = await fetchImpactCalculations(treeCount);
+  return impact.co2;
+}
+
+/**
+ * Calculate community stars based on upvote count
+ * @param {number} upvoteCount - Number of upvotes
+ * @returns {Promise<number>} Community star rating (0-5)
+ */
+export async function calculateCommunityStars(upvoteCount) {
+  const impact = await fetchImpactCalculations(upvoteCount);
+  return impact.stars;
+}
+
+/**
+ * Fetch impact calculations from backend
+ * @param {number} upvoteCount - Number of upvotes
+ * @returns {Promise<Object>} Impact calculations
+ */
+async function fetchImpactCalculations(upvoteCount) {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/impact/${upvoteCount}`);
+    if (!response.ok) {
+      throw new Error(`Backend returned ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching impact calculations:", error);
+    throw error;
+  }
+}
