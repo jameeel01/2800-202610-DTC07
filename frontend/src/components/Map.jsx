@@ -4,6 +4,7 @@ import { useState } from "react";
 import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
+import BottomSheet from "./BottomSheet";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -344,11 +345,17 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       </MapContainer>
 
       {activePin && (
-        <NominationPanel
-          pin={activePin}
+        // <NominationPanel
+        //   pin={activePin}
+        //   onClose={handleExitNomination}
+        //   onSubmit={handleSubmit}
+        //   onRemove={handleRemove}
+        // />
+
+        <BottomSheet
+          isOpen={!!activePin}
           onClose={handleExitNomination}
-          onSubmit={handleSubmit}
-          onRemove={handleRemove}
+          pin={activePin}
         />
       )}
 
