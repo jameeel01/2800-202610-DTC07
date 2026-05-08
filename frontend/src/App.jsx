@@ -1,24 +1,47 @@
-// import { useState } from "react";
-// import reactLogo from "./assets/react.svg";
-// import viteLogo from "./assets/vite.svg";
-// import heroImg from "./assets/hero.png";
 import "./App.css";
-import Navbar from "./components/Navbar";
 import LandingPage from "./pages/landingPage";
+import LeafletMap from "./components/Map.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ImpactEstimatePage from "./pages/ImpactEstimatePage";
+import { useState } from "react";
 
 function App() {
-  // const [count, setCount] = useState(0);
-
+  const [isPinDropMode, setIsPinDropMode] = useState(false);
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
+        {
+          // Pages that do not need the navbar
+        }
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+
+        {
+          // Pages that do need the navbar
+        }
+        <Route
+          element={
+            <MainLayout
+              isPinDropMode={isPinDropMode}
+              setIsPinDropMode={setIsPinDropMode}
+            />
+          }
+        >
+          <Route
+            path="/map"
+            element={
+              <LeafletMap
+                isPinDropMode={isPinDropMode}
+                setIsPinDropMode={setIsPinDropMode}
+              />
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/nomination/:id/impact" element={<ImpactEstimatePage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
