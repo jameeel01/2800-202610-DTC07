@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import mapImg from "../assets/map.png";
+import mapImg from "../assets/Map.png";
 
 function Hero() {
     return (
