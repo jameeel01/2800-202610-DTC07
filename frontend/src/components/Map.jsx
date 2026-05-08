@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
@@ -29,6 +29,40 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
   const [reason, setReason] = useState("");
+
+  // reverse geocode the pin coordinates to auto-fill location name
+  useEffect(() => {
+    if (!pin) return;
+
+    const fetchAddress = async () => {
+      // reset fields when a new pin is placed
+      setLocationName("");
+      setReason("");
+
+      try {
+        // call Nominatim API with the pin's coordinates
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${pin.latlng.lat}&lon=${pin.latlng.lng}&format=json`,
+          {
+            headers: {
+              "Accept-Language": "en",
+            },
+          },
+        );
+        const data = await res.json();
+
+        // pre-fill the location name field with the returned address
+        if (data && data.display_name) {
+          setLocationName(data.display_name);
+        }
+      } catch (err) {
+        // log error if geocode fails
+        console.error("Reverse geocode failed:", err);
+      }
+    };
+
+    fetchAddress();
+  }, [pin]);
 
   const inputStyle = {
     width: "100%",

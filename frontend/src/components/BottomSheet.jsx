@@ -1,13 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
   const [reason, setReason] = useState("");
 
+  // reverse geocode the pin coordinates to auto-fill location name
+  useEffect(() => {
+    if (!pin) return;
+
+    const fetchAddress = async () => {
+      // reset fields when a new pin is placed
+      setLocationName("");
+      setReason("");
+
+      try {
+        // call Nominatim API with the pin's coordinates
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${pin.latlng.lat}&lon=${pin.latlng.lng}&format=json`,
+          {
+            headers: {
+              "Accept-Language": "en",
+            },
+          },
+        );
+        const data = await res.json();
+
+        // pre-fill the location name field with the returned address
+        if (data && data.display_name) {
+          setLocationName(data.display_name);
+        }
+      } catch (err) {
+        // log error if geocode fails
+        console.error("Reverse geocode failed:", err);
+      }
+    };
+
+    fetchAddress();
+  }, [pin]);
+
   if (!isOpen || !pin) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[1000] md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-1000 md:hidden">
       <div className="bg-[#dad7cd] rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] px-5 pt-3 pb-6">
         {/* drag handle bar */}
         <div className="w-10 h-1 bg-gray-400 rounded-full mx-auto mb-4" />
