@@ -20,7 +20,7 @@ function StreetTreesLayer() {
   useEffect(() => {
     fetchShadeData()
       .then((data) => {
-        console.log(data);
+        console.log(data.sampleTrees);
         setTrees(data.sampleTrees || []);
         setLoading(false);
       })
