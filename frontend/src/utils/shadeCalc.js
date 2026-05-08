@@ -42,70 +42,63 @@ export async function initShadeData(setCallback) {
   }
 }
 
+// Average trunk diameter (cm) of a Vancouver street tree.
+// Source: Vancouver Open Data street-trees dataset average DBH.
+const AVG_VANCOUVER_DBH_CM = 50;
+const AVG_CANOPY_RADIUS_M = AVG_VANCOUVER_DBH_CM * 0.08;
+
 /**
- * Calculate estimated tree count based on upvote count
- * @param {number} upvoteCount - Number of upvotes
- * @returns {Promise<number>} Estimated tree count
+ * Recommends how many trees to plant based on community upvotes.
+ * @param {number} upvotes
+ * @returns {number} 1, 2, or 3
  */
-export async function calculateTreeCount(upvoteCount) {
-  const impact = await fetchImpactCalculations(upvoteCount);
-  return impact.treeCount;
+export function calculateTreeCount(upvotes) {
+  if (upvotes >= 31) return 3;
+  if (upvotes >= 11) return 2;
+  return 1;
 }
 
 /**
- * Calculate temperature reduction impact
- * @param {number} treeCount - Number of trees
- * @returns {Promise<number>} Temperature reduction in degrees Celsius
+ * Estimates shade coverage in m² for a given number of trees.
+ * Formula: pi x canopy_radius^2 x trees
+ * @param {number} trees
+ * @returns {number}
  */
-export async function calculateTempReduction(treeCount) {
-  const impact = await fetchImpactCalculations(treeCount);
-  return impact.tempReduction;
+export function calculateShadeArea(trees) {
+  return Math.round(Math.PI * Math.pow(AVG_CANOPY_RADIUS_M, 2) * trees);
 }
 
 /**
- * Calculate shade area coverage
- * @param {number} treeCount - Number of trees
- * @returns {Promise<number>} Shade area in square meters
+ * Estimates surface temperature reduction in degrees C.
+ * Each tree provides approximately 0.8 degrees C of cooling.
+ * Source: City of Vancouver Urban Forest Strategy
+ * @param {number} trees
+ * @returns {string} e.g. "-2.4"
  */
-export async function calculateShadeArea(treeCount) {
-  const impact = await fetchImpactCalculations(treeCount);
-  return impact.shadeArea;
+export function calculateTempReduction(trees) {
+  return (trees * -0.8).toFixed(1);
 }
 
 /**
- * Calculate CO2 sequestration impact
- * @param {number} treeCount - Number of trees
- * @returns {Promise<number>} CO2 sequestered in kg per year
+ * Estimates annual CO2 absorbed in kg/yr.
+ * Each urban tree absorbs approximately 16 kg of CO2 per year.
+ * Source: i-Tree Eco Vancouver 2015 report
+ * @param {number} trees
+ * @returns {number}
  */
-export async function calculateCO2(treeCount) {
-  const impact = await fetchImpactCalculations(treeCount);
-  return impact.co2;
+export function calculateCO2(trees) {
+  return trees * 16;
 }
 
 /**
- * Calculate community stars based on upvote count
- * @param {number} upvoteCount - Number of upvotes
- * @returns {Promise<number>} Community star rating (0-5)
+ * Converts upvote count into a 1 to 5 star community impact rating.
+ * @param {number} upvotes
+ * @returns {number}
  */
-export async function calculateCommunityStars(upvoteCount) {
-  const impact = await fetchImpactCalculations(upvoteCount);
-  return impact.stars;
-}
-
-/**
- * Fetch impact calculations from backend
- * @param {number} upvoteCount - Number of upvotes
- * @returns {Promise<Object>} Impact calculations
- */
-async function fetchImpactCalculations(upvoteCount) {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/impact/${upvoteCount}`);
-    if (!response.ok) {
-      throw new Error(`Backend returned ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching impact calculations:", error);
-    throw error;
-  }
+export function calculateCommunityStars(upvotes) {
+  if (upvotes >= 60) return 5;
+  if (upvotes >= 31) return 4;
+  if (upvotes >= 16) return 3;
+  if (upvotes >= 6)  return 2;
+  return 1;
 }
