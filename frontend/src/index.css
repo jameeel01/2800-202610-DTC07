@@ -20,3 +20,15 @@
 .pan-animation {
   animation: panLeft 20s linear infinite;
 }
+
+
+.map-wrapper {
+  height: calc(100vh - 80px);
+}
+
+@media (max-width: 639px) {
+  .map-wrapper {
+    height: calc(100vh - 56px);
+    margin-top: 56px;
+  }
+}
