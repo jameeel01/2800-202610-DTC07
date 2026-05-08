@@ -6,6 +6,7 @@ import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import StreetTreesLayer from "./StreetTreeLayer";
 import LoadingSpinner from "./LoadingSpinner";
+import BottomSheet from "./BottomSheet";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -248,10 +249,11 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
 
   return (
     <div
+      className="map-wrapper"
       style={{
-        height: "calc(100vh - 80px)",
         display: "flex",
         position: "relative",
+        zIndex: 0,
       }}
     >
       {!mapReady && <LoadingSpinner></LoadingSpinner>}
@@ -347,11 +349,17 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       </MapContainer>
 
       {activePin && (
-        <NominationPanel
-          pin={activePin}
+        // <NominationPanel
+        //   pin={activePin}
+        //   onClose={handleExitNomination}
+        //   onSubmit={handleSubmit}
+        //   onRemove={handleRemove}
+        // />
+
+        <BottomSheet
+          isOpen={!!activePin}
           onClose={handleExitNomination}
-          onSubmit={handleSubmit}
-          onRemove={handleRemove}
+          pin={activePin}
         />
       )}
 
