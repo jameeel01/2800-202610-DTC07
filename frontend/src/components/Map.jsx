@@ -5,6 +5,7 @@ import L from "leaflet";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import StreetTreesLayer from "./StreetTreeLayer";
+import LoadingSpinner from "./LoadingSpinner";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -202,6 +203,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const showNotification = (message) => {
     setNotification(message);
@@ -252,6 +254,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         position: "relative",
       }}
     >
+      {!mapReady && <LoadingSpinner></LoadingSpinner>}
       {notification && (
         <div
           style={{
@@ -320,6 +323,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         zoom={13}
         scrollWheelZoom={false}
         style={{ flex: 1, height: "100%" }}
+        whenReady={() => setMapReady(true)}
       >
         <ClickHandler
           isPinDropMode={isPinDropMode}
