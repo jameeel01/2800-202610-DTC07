@@ -63,6 +63,8 @@ function formatShadeResponse(trees) {
       common_name: tree.common_name,
       diameter_cm: tree.diameter_cm,
       height_m: tree.height_m,
+      latitude: tree.geo_point_2d.lat,
+      longitude: tree.geo_point_2d.lon,
     })),
   };
 }
