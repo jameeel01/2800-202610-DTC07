@@ -288,7 +288,7 @@ export function OnboardingTour({ onRestartRef }) {
   );
 }
 
-// Restart button — bottom-left of map, always visible
+// Restart button, bottom-left of map, always visible
 export function TourRestartButton({ onRestart }) {
   return (
     <button

@@ -4,11 +4,11 @@ import L from "leaflet";
 import { fetchShadeData } from "../utils/shadeCalc";
 
 const treeMarker = L.divIcon({
-  html: "🌳",
-  iconSize: [35, 35],
-  iconAnchor: [12, 12],
-  popupAnchor: [0, -12],
-  className: "", //Removes leaflet styling
+  html: '<div style="width:10px;height:10px;background:#2d6a0f;border-radius:50%;opacity:0.7;"></div>',
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+  popupAnchor: [0, -5],
+  className: "",
 });
 
 function StreetTreesLayer() {
@@ -20,7 +20,6 @@ function StreetTreesLayer() {
   useEffect(() => {
     fetchShadeData()
       .then((data) => {
-        console.log(data.sampleTrees);
         setTrees(data.sampleTrees || []);
         setLoading(false);
       })
@@ -49,7 +48,7 @@ function StreetTreesLayer() {
             padding: "10px 18px",
             background: "#2d6a0f",
             color: "white",
-            borderRadius: "8px",
+            borderRadius: "2px",
             cursor: "pointer",
             fontWeight: "bold",
           }}
