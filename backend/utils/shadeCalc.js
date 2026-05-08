@@ -59,7 +59,7 @@ function formatShadeResponse(trees) {
       canopySizeCategory: category,
       shadowCoverage,
     },
-    sampleTrees: trees.slice(0, 5).map((tree) => ({
+    sampleTrees: trees.map((tree) => ({
       common_name: tree.common_name,
       diameter_cm: tree.diameter_cm,
       height_m: tree.height_m,

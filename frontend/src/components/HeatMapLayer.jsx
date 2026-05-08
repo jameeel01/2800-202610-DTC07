@@ -1,6 +1,7 @@
 import { useMap } from "react-leaflet";
 import { useEffect, useRef, useState } from "react";
 import { fetchShadeData } from "../utils/shadeCalc";
+import L from "leaflet";
 import "leaflet.heat";
 
 function HeatmapLayer() {
@@ -9,27 +10,28 @@ function HeatmapLayer() {
   const heatLayerRef = useRef(null);
 
   useEffect(() => {
-    fetchShadeData().then(
-      (data) => {
-        const points = data.sampleTrees
-          .filter((tree) => tree.latitude && tree.longitude)
-          .map((tree) => [tree.latitude, tree.longitude, 0.5]); // 0.5 intensity for all trees
+    let heat;
 
-        const heat = window.L.heatLayer(points, {
-          radius: 15,
-          blur: 30,
-          max: 1.0,
-          minOpacity: 0.5,
-        });
+    fetchShadeData().then((data) => {
+      const points = data.sampleTrees
+        .filter((tree) => tree.latitude && tree.longitude)
+        .map((tree) => [tree.latitude, tree.longitude, 0.5]);
 
-        heat.addTo(map); //Add heatmap to map when it mounts (gets created)
-        heatLayerRef.current = heat;
+      heat = L.heatLayer(points, {
+        radius: 15,
+        blur: 30,
+        max: 1.0,
+        minOpacity: 0.5,
+      });
 
-        return () => map.removeLayer(heat); // remove heatmap when it unmounts (gets destroyed)
-      },
-      [map],
-    ); //when map is ready, run it
-  });
+      heat.addTo(map);
+      heatLayerRef.current = heat;
+    });
+
+    return () => {
+      if (heat) map.removeLayer(heat);
+    };
+  }, [map]);
 
   useEffect(() => {
     if (!heatLayerRef.current) return;
