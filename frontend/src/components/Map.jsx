@@ -289,7 +289,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1000,
-            background: "#111827",
+            background: "#2d6a0f",
             padding: "10px 20px",
             borderRadius: "8px",
             display: "flex",
@@ -300,9 +300,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             whiteSpace: "nowrap",
           }}
         >
-          <span style={{ color: "#9ca3af" }}>
-            Tap the map to place your pin.
-          </span>
+          <span style={{ color: "white" }}>Tap the map to place your pin.</span>
           <button
             onClick={handleExitNomination}
             style={{
