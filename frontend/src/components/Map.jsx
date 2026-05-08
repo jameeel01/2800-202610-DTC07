@@ -294,10 +294,10 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
     >
       {!mapReady && <LoadingSpinner></LoadingSpinner>}
 
-      {/* Onboarding tour — shows automatically on first visit */}
+      {/* Onboarding tour, shows automatically on first visit */}
       <OnboardingTour onRestartRef={tourRestartRef} />
 
-      {/* Restart tour button — always visible bottom-left */}
+      {/* Restart tour button, always visible bottom-left */}
       <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
       {notification && (
         <div
