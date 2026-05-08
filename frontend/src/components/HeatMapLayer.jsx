@@ -33,14 +33,15 @@ function HeatmapLayer() {
     };
   }, [map]);
 
-  useEffect(() => {
+  const handleToggle = () => {
     if (!heatLayerRef.current) return;
     if (showHeatMap) {
-      heatLayerRef.current.addTo(map);
-    } else {
       map.removeLayer(heatLayerRef.current);
+    } else {
+      heatLayerRef.current.addTo(map);
     }
-  }, [showHeatMap, map]);
+    setShowHeatMap((prev) => !prev);
+  };
 
   return (
     <div
@@ -52,13 +53,14 @@ function HeatmapLayer() {
       }}
     >
       <button
-        onClick={() => setShowHeatMap((prev) => !prev)} // Flip boolean
+        onClick={handleToggle}
         style={{
           padding: "10px 18px",
           background: "#2d6a0f",
           color: "white",
-          borderRadius: "8px",
+          borderRadius: "2px",
           fontWeight: "bold",
+          cursor: "pointer",
         }}
       >
         {showHeatMap ? "Hide Heatmap" : "Show Heatmap"}

@@ -5,7 +5,6 @@ import L from "leaflet";
 import { OnboardingTour, TourRestartButton } from "./OnboardingTour";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
-import StreetTreesLayer from "./StreetTreeLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
 
@@ -386,7 +385,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             }}
           />
         ))}
-        <StreetTreesLayer></StreetTreesLayer>
+
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
