@@ -348,20 +348,26 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
+      {/* Desktop - teammate's side panel */}
       {activePin && (
-        // <NominationPanel
-        //   pin={activePin}
-        //   onClose={handleExitNomination}
-        //   onSubmit={handleSubmit}
-        //   onRemove={handleRemove}
-        // />
-
-        <BottomSheet
-          isOpen={!!activePin}
-          onClose={handleExitNomination}
-          pin={activePin}
-        />
+        <div className="hidden md:flex">
+          <NominationPanel
+            pin={activePin}
+            onClose={handleExitNomination}
+            onSubmit={handleSubmit}
+            onRemove={handleRemove}
+          />
+        </div>
       )}
+
+      {/* Mobile - your bottom sheet */}
+      <BottomSheet
+        isOpen={!!activePin}
+        onClose={handleExitNomination}
+        onSubmit={handleSubmit}
+        onRemove={handleRemove}
+        pin={activePin}
+      />
 
       {!activePin && (
         <button
