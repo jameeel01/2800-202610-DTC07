@@ -5,7 +5,7 @@ import { fetchShadeData } from "../utils/shadeCalc";
 
 const treeMarker = L.divIcon({
   html: "🌳",
-  iconSize: [25, 25],
+  iconSize: [35, 35],
   iconAnchor: [12, 12],
   popupAnchor: [0, -12],
   className: "", //Removes leaflet styling
