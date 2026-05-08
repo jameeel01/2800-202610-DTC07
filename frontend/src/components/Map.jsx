@@ -1,7 +1,8 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
+import { OnboardingTour, TourRestartButton } from "./OnboardingTour";
 import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import StreetTreesLayer from "./StreetTreeLayer";
@@ -239,6 +240,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
   const [mapReady, setMapReady] = useState(false);
+  const tourRestartRef = useRef(null);
 
   const showNotification = (message) => {
     setNotification(message);
@@ -291,6 +293,12 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       }}
     >
       {!mapReady && <LoadingSpinner></LoadingSpinner>}
+
+      {/* Onboarding tour — shows automatically on first visit */}
+      <OnboardingTour onRestartRef={tourRestartRef} />
+
+      {/* Restart tour button — always visible bottom-left */}
+      <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
       {notification && (
         <div
           style={{
@@ -382,7 +390,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
-      {/* Desktop - teammate's side panel */}
+      {/* desktop nomination */}
       {activePin && (
         <div className="hidden md:flex">
           <NominationPanel
@@ -394,7 +402,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         </div>
       )}
 
-      {/* Mobile - your bottom sheet */}
+      {/* mobile nomination */}
       <BottomSheet
         isOpen={!!activePin}
         onClose={handleExitNomination}
