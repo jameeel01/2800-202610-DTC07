@@ -47,8 +47,8 @@ function StreetTreesLayer() {
           onClick={() => setShowTrees((prev) => !prev)}
           style={{
             padding: "10px 18px",
-            background: "#1a1a2e",
-            color: "#9ca3af",
+            background: "#2d6a0f",
+            color: "white",
             borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "bold",
