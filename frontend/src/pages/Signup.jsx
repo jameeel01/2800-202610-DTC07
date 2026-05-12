@@ -30,8 +30,6 @@ function Signup() {
       });
 
       const data = await res.json();
-      console.log("Response status:", res.status);
-      console.log("Response data:", data);
       if (!res.ok) {
         setError(data.error || "Signup failed.");
         setLoading(false);

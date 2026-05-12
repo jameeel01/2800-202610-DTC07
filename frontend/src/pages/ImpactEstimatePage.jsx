@@ -10,7 +10,7 @@ import {
   calculateCommunityStars,
 } from "../utils/shadeCalc";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function ImpactEstimatePage() {
   const { id } = useParams();
@@ -99,7 +99,7 @@ function ImpactEstimatePage() {
     <div className="min-h-screen bg-[#f0f7f0] px-4 py-6">
       {/* Back button */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/nomination/${id}`)}
         className="flex items-center gap-1 text-sm text-gray-500 mb-6"
       >
         Back
