@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
   const [reason, setReason] = useState("");
+  const MAX_CHARS = 200;
 
   // reverse geocode the pin coordinates to auto-fill location name
   useEffect(() => {
@@ -87,9 +88,14 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
           <textarea
             placeholder="Describe the need for shade..."
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => setReason(e.target.value.slice(0, MAX_CHARS))}
             className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#b5d48a] bg-white text-sm text-[#555] outline-none h-24 resize-none"
           />
+          <p
+            className={`text-xs mt-1 text-right ${reason.length >= MAX_CHARS ? "text-red-500" : "text-gray-500"}`}
+          >
+            {reason.length}/{MAX_CHARS}
+          </p>
         </div>
 
         {/* buttons */}
