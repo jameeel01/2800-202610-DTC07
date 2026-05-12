@@ -29,6 +29,7 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
   const [reason, setReason] = useState("");
+  const MAX_CHARS = 200;
 
   // reverse geocode the pin coordinates to auto-fill location name
   useEffect(() => {
@@ -158,9 +159,14 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         <textarea
           placeholder="Describe the need for shade..."
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
+          onChange={(e) => setReason(e.target.value.slice(0, MAX_CHARS))}
           style={{ ...inputStyle, height: "90px", resize: "none" }}
         />
+        <p
+          className={`text-xs -mt-5 mb-4 text-right ${reason.length >= MAX_CHARS ? "text-red-500" : "text-gray-500"}`}
+        >
+          {reason.length}/{MAX_CHARS}
+        </p>
       </div>
 
       {
