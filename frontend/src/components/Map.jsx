@@ -256,15 +256,56 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
     setActivePin(newPin);
   };
 
-  const handleSubmit = ({ pin, locationName, reason }) => {
-    setPins((prev) =>
-      prev.map((p) =>
-        p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
-      ),
-    );
-    setActivePin(null);
-    setIsPinDropMode(false);
-    showNotification("Nomination submitted successfully!");
+  const handleSubmit = async ({ pin, locationName, reason }) => {
+    try {
+      // get logged in user from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+
+      if (!user || !token) {
+        showNotification("You must be logged in to nominate.");
+        return;
+      }
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/nominations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          latitude: pin.latlng.lat,
+          longitude: pin.latlng.lng,
+          streetAddress: locationName,
+          nominatorId: user.id,
+          nominatorName: user.name,
+          nominatorEmail: user.email,
+          title: locationName,
+          description: reason,
+          category: "other", // default for now
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showNotification(data.error || "Submission failed.");
+        return;
+      }
+
+      // update local pin state on success
+      setPins((prev) =>
+        prev.map((p) =>
+          p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
+        ),
+      );
+      setActivePin(null);
+      setIsPinDropMode(false);
+      showNotification("Nomination submitted successfully!");
+    } catch (err) {
+      console.error("Submit error:", err);
+      showNotification("Something went wrong. Try again.");
+    }
   };
 
   const handlePanelClose = () => {
