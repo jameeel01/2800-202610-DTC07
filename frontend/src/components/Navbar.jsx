@@ -7,32 +7,38 @@ function Navbar() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  // check if user is logged in
-  const token = localStorage.getItem("token");
-  const isLoggedIn = !!token;
+  // load user from localStorage
+  const [user] = useState(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        return JSON.parse(userData);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
   const handleLogout = () => {
-    // clear localStorage and redirect to home
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/");
     closeMenu();
   };
 
-  const baseLinks = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/map", label: "Map", icon: Map },
-  ];
-
-  // show logout when logged in, login and signup when logged out
-  const authLinks = isLoggedIn
-    ? []
+  // show different nav if logged in
+  const links = user
+    ? [
+        { to: "/", label: "Home", icon: Home },
+        { to: "/map", label: "Map", icon: Map },
+      ]
     : [
+        { to: "/", label: "Home", icon: Home },
+        { to: "/map", label: "Map", icon: Map },
         { to: "/login", label: "Login", icon: LogIn },
         { to: "/signup", label: "Sign Up", icon: UserPlus },
       ];
-
-  const links = [...baseLinks, ...authLinks];
 
   const closeMenu = () => setIsOpen(false);
 
@@ -57,7 +63,7 @@ function Navbar() {
         })}
 
         {/* logout button for desktop */}
-        {isLoggedIn && (
+        {user && (
           <button
             onClick={handleLogout}
             className="flex flex-col items-center gap-1 text-xs text-gray-400 hover:text-[#a3b18a]"
@@ -126,7 +132,7 @@ function Navbar() {
         })}
 
         {/* logout button for mobile drawer */}
-        {isLoggedIn && (
+        {user && (
           <button
             onClick={handleLogout}
             className="flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700 w-full"
