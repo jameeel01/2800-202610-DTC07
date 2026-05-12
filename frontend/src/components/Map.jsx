@@ -28,6 +28,7 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
 
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
+  const [category, setCategory] = useState("");
   const [reason, setReason] = useState("");
   const MAX_CHARS = 200;
 
@@ -151,6 +152,25 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
           onChange={(e) => setLocationName(e.target.value)}
           style={inputStyle}
         />
+        {
+          // Category dropdown
+        }
+        <label style={labelStyle}>Category</label>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="" disabled>
+            Select a category...
+          </option>
+          <option value="Bus Stop">Bus Stop</option>
+          <option value="Park">Park</option>
+          <option value="Sidewalk">Sidewalk</option>
+          <option value="Schoolyard">Schoolyard</option>
+          <option value="Plaza">Plaza</option>
+          <option value="Other">Other</option>
+        </select>
 
         {
           // Text box to enter description and reasoning for shade
@@ -181,7 +201,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         }}
       >
         <button
-          onClick={() => onSubmit({ pin, locationName, reason })}
+          onClick={() => onSubmit({ pin, locationName, reason, category })}
           style={{
             width: "100%",
             padding: "13px",
