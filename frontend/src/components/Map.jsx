@@ -282,15 +282,66 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
     setActivePin(newPin);
   };
 
-  const handleSubmit = ({ pin, locationName, reason }) => {
-    setPins((prev) =>
-      prev.map((p) =>
-        p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
-      ),
-    );
-    setActivePin(null);
-    setIsPinDropMode(false);
-    showNotification("Nomination submitted successfully!");
+  const handleSubmit = async ({ pin, locationName, reason, category }) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (!user || !token) {
+      showNotification("You must be logged in to nominate.");
+      return;
+    }
+
+    try {
+      if (!category) {
+        showNotification("Please select a category.");
+        return;
+      }
+      if (!reason) {
+        showNotification("Please describe why this area needs shade.");
+        return;
+      }
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/nominations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            latitude: pin.latlng.lat,
+            longitude: pin.latlng.lng,
+            streetAddress: locationName,
+            neighborhood: "",
+            nominatorId: user._id || user.id || user.user.id,
+            nominatorName: user.name,
+            nominatorEmail: user.email,
+            title: locationName,
+            description: reason,
+            category: category.toLowerCase(),
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Nomination Failed: ", JSON.stringify(err));
+        showNotification("Failed to submit nomination.");
+        return;
+      }
+
+      setPins((prev) =>
+        prev.map((p) =>
+          p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
+        ),
+      );
+      setActivePin(null);
+      setIsPinDropMode(false);
+      showNotification("Nomination submitted successfully!");
+    } catch (error) {
+      console.error("Submit error: ", error);
+      showNotification("Failed to submit nomination.");
+    }
   };
 
   const handlePanelClose = () => {
