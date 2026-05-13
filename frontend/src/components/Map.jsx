@@ -8,6 +8,7 @@ import HeatmapLayer from "./HeatMapLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
 import BlackMarker from "../assets/BlackMarker.svg";
+import NominationsPanel from "./NominationsPanel";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -338,6 +339,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [notification, setNotification] = useState(null);
   const [notificationType, setNotificationType] = useState("success");
   const [mapReady, setMapReady] = useState(false);
+  const [showNominations, setShowNominations] = useState(false);
   const tourRestartRef = useRef(null);
 
   const showNotification = (message, type = "success") => {
@@ -537,7 +539,10 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             }}
           />
         ))}
-
+        <NominationsPanel
+          isOpen={showNominations}
+          onClose={() => setShowNominations(false)}
+        />
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
