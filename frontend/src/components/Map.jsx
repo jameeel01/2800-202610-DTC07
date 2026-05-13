@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
@@ -7,7 +7,6 @@ import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
-import BlackMarker from "../assets/BlackMarker.svg";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -24,6 +23,15 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
       onPinPlaced(e.latlng);
     },
   });
+  return null;
+}
+
+// recenter the preview map when pin coordinates change
+function RecenterMap({ lat, lng }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng], 16);
+  }, [lat, lng]);
   return null;
 }
 
@@ -56,16 +64,12 @@ function getTreeCountFromNominatim(data) {
   const category = data?.category?.toLowerCase();
   const amenity = data?.address?.amenity?.toLowerCase();
 
-  return (
-    typeToTrees[type] || typeToTrees[category] || typeToTrees[amenity] || 3
-  );
+  return typeToTrees[type] || typeToTrees[category] || typeToTrees[amenity] || 3;
 }
 
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
-  const [category, setCategory] = useState("");
   const [reason, setReason] = useState("");
-  const MAX_CHARS = 200;
 
   // tree count derived from nominatim location type
   const [treeCount, setTreeCount] = useState(3);
@@ -146,6 +150,29 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
       }}
     >
       {
+        // Small non-interactive map preview centered on nomination coordinates
+      }
+      <div style={{ height: "140px", width: "100%", overflow: "hidden" }}>
+        <MapContainer
+          center={[pin.latlng.lat, pin.latlng.lng]}
+          zoom={16}
+          style={{ height: "100%", width: "100%" }}
+          dragging={false}
+          zoomControl={false}
+          scrollWheelZoom={false}
+          doubleClickZoom={false}
+          touchZoom={false}
+          keyboard={false}
+          attributionControl={false}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <Marker position={[pin.latlng.lat, pin.latlng.lng]} icon={bluemarker} />
+          {/* recenter map when pin changes */}
+          <RecenterMap lat={pin.latlng.lat} lng={pin.latlng.lng} />
+        </MapContainer>
+      </div>
+
+      {
         // Title of the pin (currently coordinates)
       }
       <div style={{ padding: "20px 20px 0" }}>
@@ -198,25 +225,6 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
           onChange={(e) => setLocationName(e.target.value)}
           style={inputStyle}
         />
-        {
-          // Category dropdown
-        }
-        <label style={labelStyle}>Category</label>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="" disabled>
-            Select a category...
-          </option>
-          <option value="Bus Stop">Bus Stop</option>
-          <option value="Park">Park</option>
-          <option value="Sidewalk">Sidewalk</option>
-          <option value="Schoolyard">Schoolyard</option>
-          <option value="Plaza">Plaza</option>
-          <option value="Other">Other</option>
-        </select>
 
         {
           // Text box to enter description and reasoning for shade
@@ -225,21 +233,16 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         <textarea
           placeholder="Describe the need for shade..."
           value={reason}
-          onChange={(e) => setReason(e.target.value.slice(0, MAX_CHARS))}
+          onChange={(e) => setReason(e.target.value)}
           style={{ ...inputStyle, height: "90px", resize: "none" }}
         />
-        <p
-          className={`text-xs -mt-5 mb-4 text-right ${reason.length >= MAX_CHARS ? "text-red-500" : "text-gray-500"}`}
-        >
-          {reason.length}/{MAX_CHARS}
-        </p>
 
         {
           // Projected impact section
         }
         <div className="bg-[#c8d8b0] rounded-xl p-3 mb-4">
           <p className="text-[11px] font-bold text-[#1a3a0f] uppercase tracking-wide mb-2">
-            Estimated Impact — {treeCount} Trees
+            🌳 Estimated Impact — {treeCount} Trees
           </p>
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -248,9 +251,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
               { label: "Shade Coverage", value: `${shadeArea}m²` },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white rounded-lg p-2 text-center">
-                <p className="text-[15px] font-bold text-[#344e41] m-0">
-                  {value}
-                </p>
+                <p className="text-[15px] font-bold text-[#344e41] m-0">{value}</p>
                 <p className="text-[11px] text-[#588157] mt-0.5">{label}</p>
               </div>
             ))}
@@ -273,7 +274,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         }}
       >
         <button
-          onClick={() => onSubmit({ pin, locationName, reason, category })}
+          onClick={() => onSubmit({ pin, locationName, reason })}
           style={{
             width: "100%",
             padding: "13px",
@@ -336,13 +337,11 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [notificationType, setNotificationType] = useState("success");
   const [mapReady, setMapReady] = useState(false);
   const tourRestartRef = useRef(null);
 
-  const showNotification = (message, type = "success") => {
+  const showNotification = (message) => {
     setNotification(message);
-    setNotificationType(type);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -356,54 +355,44 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
     setActivePin(newPin);
   };
 
-  const handleSubmit = async ({ pin, locationName, reason, category }) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
-
-    if (!user || !token) {
-      showNotification("You must be logged in to nominate.", "error");
-      return;
-    }
-
+  const handleSubmit = async ({ pin, locationName, reason }) => {
     try {
-      if (!category) {
-        showNotification("Please select a category.", "error");
+      // get logged in user from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+
+      if (!user || !token) {
+        showNotification("You must be logged in to nominate.");
         return;
       }
-      if (!reason) {
-        showNotification("Please describe why this area needs shade.", "error");
-        return;
-      }
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/nominations`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            latitude: pin.latlng.lat,
-            longitude: pin.latlng.lng,
-            streetAddress: locationName,
-            neighborhood: "",
-            nominatorId: user._id || user.id || user.user.id,
-            nominatorName: user.name,
-            nominatorEmail: user.email,
-            title: locationName,
-            description: reason,
-            category: category.toLowerCase(),
-          }),
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/nominations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({
+          latitude: pin.latlng.lat,
+          longitude: pin.latlng.lng,
+          streetAddress: locationName,
+          nominatorId: user.id,
+          nominatorName: user.name,
+          nominatorEmail: user.email,
+          title: locationName,
+          description: reason,
+          category: "other", // default for now
+        }),
+      });
+
+      const data = await res.json();
 
       if (!res.ok) {
-        const err = await res.json();
-        console.error("Nomination Failed: ", JSON.stringify(err));
-        showNotification("Failed to submit nomination.", "error");
+        showNotification(data.error || "Submission failed.");
         return;
       }
 
+      // update local pin state on success
       setPins((prev) =>
         prev.map((p) =>
           p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
@@ -412,9 +401,9 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       setActivePin(null);
       setIsPinDropMode(false);
       showNotification("Nomination submitted successfully!");
-    } catch (error) {
-      console.error("Submit error: ", error);
-      showNotification("Failed to submit nomination.");
+    } catch (err) {
+      console.error("Submit error:", err);
+      showNotification("Something went wrong. Try again.");
     }
   };
 
@@ -458,7 +447,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1001,
-            background: notificationType === "success" ? "#2d6a0f" : "#8b1a1a",
+            background: "#2d6a0f",
             color: "white",
             padding: "10px 20px",
             borderRadius: "8px",
@@ -471,7 +460,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             whiteSpace: "nowrap",
           }}
         >
-          {notificationType === "success" ? "✓" : "✕"} {notification}
+          ✓ {notification}
         </div>
       )}
 
@@ -562,45 +551,27 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         pin={activePin}
       />
 
-      {!activePin &&
-        (localStorage.getItem("token") ? (
-          <button
-            onClick={() => setIsPinDropMode(true)}
-            style={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              zIndex: 1000,
-              padding: "10px 18px",
-              background: "#2d6a0f",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "14px",
-            }}
-          >
-            Nominate +
-          </button>
-        ) : (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              zIndex: 1000,
-              padding: "10px 18px",
-              background: "#555",
-              color: "white",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "bold",
-            }}
-          >
-            Log in to nominate
-          </div>
-        ))}
+      {!activePin && (
+        <button
+          onClick={() => setIsPinDropMode(true)}
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            right: "20px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#2d6a0f",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+          }}
+        >
+          Nominate +
+        </button>
+      )}
     </div>
   );
 }
