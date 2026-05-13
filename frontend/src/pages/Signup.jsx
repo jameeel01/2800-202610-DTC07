@@ -22,11 +22,14 @@ function Signup() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fullName, email, password }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: fullName, email, password }),
+        },
+      );
 
       const data = await res.json();
       console.log("Response status:", res.status);
@@ -39,8 +42,8 @@ function Signup() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
-    } catch (err) {
+      navigate("/map");
+    } catch {
       setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);
