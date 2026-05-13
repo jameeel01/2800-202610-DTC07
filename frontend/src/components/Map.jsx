@@ -26,9 +26,49 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
   return null;
 }
 
+// map nominatim location types to estimated tree counts
+const typeToTrees = {
+  park: 6,
+  nature_reserve: 6,
+  forest: 6,
+  school: 5,
+  university: 5,
+  college: 5,
+  playground: 4,
+  recreation_ground: 4,
+  pitch: 4,
+  plaza: 5,
+  square: 5,
+  footway: 2,
+  pedestrian: 2,
+  path: 2,
+  bus_stop: 1,
+  bus_station: 1,
+  street: 2,
+  residential: 3,
+  commercial: 3,
+};
+
+function getTreeCountFromNominatim(data) {
+  // check type and category from nominatim response
+  const type = data?.type?.toLowerCase();
+  const category = data?.category?.toLowerCase();
+  const amenity = data?.address?.amenity?.toLowerCase();
+
+  return typeToTrees[type] || typeToTrees[category] || typeToTrees[amenity] || 3;
+}
+
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
   const [reason, setReason] = useState("");
+
+  // tree count derived from nominatim location type
+  const [treeCount, setTreeCount] = useState(3);
+
+  // derived impact calculations
+  const tempReduction = Math.round(treeCount * 0.3 * 10) / 10;
+  const shadeArea = Math.round(treeCount * 150);
+  const co2 = Math.round(treeCount * 21);
 
   // reverse geocode the pin coordinates to auto-fill location name
   useEffect(() => {
@@ -38,6 +78,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
       // reset fields when a new pin is placed
       setLocationName("");
       setReason("");
+      setTreeCount(3);
 
       try {
         // call Nominatim API with the pin's coordinates
@@ -55,6 +96,9 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         if (data && data.display_name) {
           setLocationName(data.display_name);
         }
+
+        // calculate tree count based on location type from nominatim
+        setTreeCount(getTreeCountFromNominatim(data));
       } catch (err) {
         // log error if geocode fails
         console.error("Reverse geocode failed:", err);
@@ -75,7 +119,6 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
     color: "#555",
     outline: "none",
     marginBottom: "16px",
-    fontFamily: "sans-serif",
   };
 
   const labelStyle = {
@@ -93,8 +136,8 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
         background: "#dad7cd",
         display: "flex",
         flexDirection: "column",
-        fontFamily: "sans-serif",
         borderLeft: "1px solid #b5d48a",
+        overflowY: "auto",
       }}
     >
       {
@@ -161,6 +204,30 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
           onChange={(e) => setReason(e.target.value)}
           style={{ ...inputStyle, height: "90px", resize: "none" }}
         />
+
+        {
+          // Projected impact section
+        }
+        <div className="bg-[#c8d8b0] rounded-xl p-3 mb-4">
+          <p className="text-[11px] font-bold text-[#1a3a0f] uppercase tracking-wide mb-2">
+            Estimated Impact — {treeCount} Trees
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Avg Temp Reduction", value: `-${tempReduction}°C` },
+              { label: "Trees Planted", value: `${treeCount}` },
+              { label: "Shade Coverage", value: `${shadeArea}m²` },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-white rounded-lg p-2 text-center">
+                <p className="text-[15px] font-bold text-[#344e41] m-0">{value}</p>
+                <p className="text-[11px] text-[#588157] mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-[#588157] mt-2">
+            Based on Vancouver climate data.
+          </p>
+        </div>
       </div>
 
       {
@@ -339,6 +406,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
 
       {/* Restart tour button, always visible bottom-left */}
       <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
+
       {notification && (
         <div
           style={{
