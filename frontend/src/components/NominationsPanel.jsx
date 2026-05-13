@@ -4,9 +4,23 @@ import {
   calculateTempReduction,
   calculateShadeArea,
 } from "../utils/shadeCalc";
+import ParkIcon from "../assets/park.svg";
+import BusStopIcon from "../assets/bus-stop.svg";
+import SchoolYardIcon from "../assets/bus-stop.svg";
+import PlazaIcon from "../assets/school-yard.svg";
+import SidewalkIcon from "../assets/bus-stop.svg";
+import OtherIcon from "../assets/bus-stop.svg";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 const FILTERS = ["All", "Recent", "Most Upvoted", "Mine"];
+const categoryIcons = {
+  park: ParkIcon,
+  "bus stop": BusStopIcon,
+  sidewalk: SidewalkIcon,
+  schoolyard: SchoolYardIcon,
+  plaza: PlazaIcon,
+  other: OtherIcon,
+};
 
 function NominationCard({ nomination, onClick }) {
   const trees = calculateTreeCount(nomination.upvoteCount);
@@ -28,22 +42,12 @@ function NominationCard({ nomination, onClick }) {
         padding: "12px",
       }}
     >
-      {/* tree emoji thumbnail */}
-      <div
-        style={{
-          width: "50px",
-          height: "50px",
-          background: "#c8d8b0",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "24px",
-          flexShrink: 0,
-        }}
-      >
-        🌳
-      </div>
+      <img
+        src={categoryIcons[nomination.category?.toLowerCase()] || OtherIcon}
+        alt={nomination.category}
+        width="32"
+        height="32"
+      />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <span
