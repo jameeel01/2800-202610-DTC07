@@ -213,17 +213,6 @@ function NominationsPanel() {
         >
           Nominations
         </h2>
-        <button
-          onClick={() => setIsOpen(false)}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "20px",
-            cursor: "pointer",
-          }}
-        >
-          ✕
-        </button>
       </div>
 
       {/* filter tabs */}
