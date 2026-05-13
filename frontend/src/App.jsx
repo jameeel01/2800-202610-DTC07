@@ -1,12 +1,13 @@
 import "./App.css";
 import LandingPage from "./pages/landingPage";
-import LeafletMap from "./components/Map.jsx";
+// import LeafletMap from "./components/Map.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ImpactEstimatePage from "./pages/ImpactEstimatePage";
 import { useState } from "react";
+import MapPage from "./pages/MapPage";
 
 function App() {
   const [isPinDropMode, setIsPinDropMode] = useState(false);
@@ -32,7 +33,7 @@ function App() {
           <Route
             path="/map"
             element={
-              <LeafletMap
+              <MapPage
                 isPinDropMode={isPinDropMode}
                 setIsPinDropMode={setIsPinDropMode}
               />
@@ -40,7 +41,10 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/nomination/:id/impact" element={<ImpactEstimatePage />} />
+          <Route
+            path="/nomination/:id/impact"
+            element={<ImpactEstimatePage />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>
