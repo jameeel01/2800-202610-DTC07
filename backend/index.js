@@ -149,6 +149,9 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
     title = title?.trim();
     description = description?.trim();
 
+    // default category to 'other' if not provided
+    category = category || "other";
+
     // check required fields
     if (
       !latitude ||
@@ -158,8 +161,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       !nominatorName ||
       !nominatorEmail ||
       !title ||
-      !description ||
-      !category
+      !description
     ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
