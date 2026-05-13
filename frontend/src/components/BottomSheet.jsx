@@ -34,7 +34,9 @@ function getTreeCountFromNominatim(data) {
 
 function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
   const [locationName, setLocationName] = useState("");
+  const [category, setCategory] = useState("");
   const [reason, setReason] = useState("");
+  const MAX_CHARS = 200;
 
   // tree count derived from nominatim location type
   const [treeCount, setTreeCount] = useState(3);
@@ -123,6 +125,28 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
           />
         </div>
 
+        {/* category dropdown */}
+        <div className="mb-4">
+          <label className="block text-[13px] font-semibold text-[#1a3a0f] mb-1.5">
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#b5d48a] bg-white text-sm text-[#555] outline-none"
+          >
+            <option value="" disabled>
+              Select a category...
+            </option>
+            <option value="Bus Stop">Bus Stop</option>
+            <option value="Park">Park</option>
+            <option value="Sidewalk">Sidewalk</option>
+            <option value="Schoolyard">Schoolyard</option>
+            <option value="Plaza">Plaza</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
         {/* reason textarea */}
         <div className="mb-4">
           <label className="block text-[13px] font-semibold text-[#1a3a0f] mb-1.5">
@@ -131,9 +155,14 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
           <textarea
             placeholder="Describe the need for shade..."
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => setReason(e.target.value.slice(0, MAX_CHARS))}
             className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#b5d48a] bg-white text-sm text-[#555] outline-none h-24 resize-none"
           />
+          <p
+            className={`text-xs mt-1 text-right ${reason.length >= MAX_CHARS ? "text-red-500" : "text-gray-500"}`}
+          >
+            {reason.length}/{MAX_CHARS}
+          </p>
         </div>
 
         {/* projected impact section */}
@@ -161,7 +190,7 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
         {/* buttons */}
         <div className="flex flex-col gap-2.5">
           <button
-            onClick={() => onSubmit({ pin, locationName, reason })}
+            onClick={() => onSubmit({ pin, locationName, reason, category })}
             className="w-full py-3 bg-[#344e41] text-white rounded-xl text-[15px] font-bold"
           >
             Submit Nomination
