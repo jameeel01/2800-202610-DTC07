@@ -351,7 +351,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       latlng,
       label: `${latlng.lat.toFixed(4)}° N, ${Math.abs(latlng.lng).toFixed(4)}° W`,
     };
-    setPins((prev) => [...prev, newPin]);
+    // remove any pins that were not submitted before adding the new one
+    setPins((prev) => [...prev.filter((p) => p.submitted), newPin]);
     setActivePin(newPin);
   };
 
