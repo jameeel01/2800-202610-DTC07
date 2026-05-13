@@ -38,8 +38,8 @@ function Signup() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
-    } catch (err) {
+      navigate("/map");
+    } catch {
       setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);
