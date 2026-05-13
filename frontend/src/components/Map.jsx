@@ -264,11 +264,13 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [notificationType, setNotificationType] = useState("success");
   const [mapReady, setMapReady] = useState(false);
   const tourRestartRef = useRef(null);
 
-  const showNotification = (message) => {
+  const showNotification = (message, type = "success") => {
     setNotification(message);
+    setNotificationType(type);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -287,17 +289,17 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
     const token = localStorage.getItem("token");
 
     if (!user || !token) {
-      showNotification("You must be logged in to nominate.");
+      showNotification("You must be logged in to nominate.", "error");
       return;
     }
 
     try {
       if (!category) {
-        showNotification("Please select a category.");
+        showNotification("Please select a category.", "error");
         return;
       }
       if (!reason) {
-        showNotification("Please describe why this area needs shade.");
+        showNotification("Please describe why this area needs shade.", "error");
         return;
       }
       const res = await fetch(
@@ -326,7 +328,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
       if (!res.ok) {
         const err = await res.json();
         console.error("Nomination Failed: ", JSON.stringify(err));
-        showNotification("Failed to submit nomination.");
+        showNotification("Failed to submit nomination.", "error");
         return;
       }
 
@@ -383,7 +385,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1001,
-            background: "#2d6a0f",
+            background: notificationType === "success" ? "#2d6a0f" : "#8b1a1a",
             color: "white",
             padding: "10px 20px",
             borderRadius: "8px",
@@ -396,7 +398,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             whiteSpace: "nowrap",
           }}
         >
-          ✓ {notification}
+          {notificationType === "success" ? "✓" : "✕"} {notification}
         </div>
       )}
 
