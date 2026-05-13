@@ -1,4 +1,10 @@
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
@@ -7,6 +13,8 @@ import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
+import BlackMarker from "../assets/BlackMarker.svg";
+import NominationsPanel from "./NominationsPanel";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -64,7 +72,9 @@ function getTreeCountFromNominatim(data) {
   const category = data?.category?.toLowerCase();
   const amenity = data?.address?.amenity?.toLowerCase();
 
-  return typeToTrees[type] || typeToTrees[category] || typeToTrees[amenity] || 3;
+  return (
+    typeToTrees[type] || typeToTrees[category] || typeToTrees[amenity] || 3
+  );
 }
 
 function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
@@ -166,7 +176,10 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
           attributionControl={false}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[pin.latlng.lat, pin.latlng.lng]} icon={bluemarker} />
+          <Marker
+            position={[pin.latlng.lat, pin.latlng.lng]}
+            icon={bluemarker}
+          />
           {/* recenter map when pin changes */}
           <RecenterMap lat={pin.latlng.lat} lng={pin.latlng.lng} />
         </MapContainer>
@@ -251,7 +264,9 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
               { label: "Shade Coverage", value: `${shadeArea}m²` },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white rounded-lg p-2 text-center">
-                <p className="text-[15px] font-bold text-[#344e41] m-0">{value}</p>
+                <p className="text-[15px] font-bold text-[#344e41] m-0">
+                  {value}
+                </p>
                 <p className="text-[11px] text-[#588157] mt-0.5">{label}</p>
               </div>
             ))}
@@ -338,6 +353,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
   const [mapReady, setMapReady] = useState(false);
+  const [showNominations, setShowNominations] = useState(false);
   const tourRestartRef = useRef(null);
 
   const showNotification = (message) => {
@@ -367,24 +383,27 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         return;
       }
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/nominations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/nominations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            latitude: pin.latlng.lat,
+            longitude: pin.latlng.lng,
+            streetAddress: locationName,
+            nominatorId: user.id,
+            nominatorName: user.name,
+            nominatorEmail: user.email,
+            title: locationName,
+            description: reason,
+            category: "other", // default for now
+          }),
         },
-        body: JSON.stringify({
-          latitude: pin.latlng.lat,
-          longitude: pin.latlng.lng,
-          streetAddress: locationName,
-          nominatorId: user.id,
-          nominatorName: user.name,
-          nominatorEmail: user.email,
-          title: locationName,
-          description: reason,
-          category: "other", // default for now
-        }),
-      });
+      );
 
       const data = await res.json();
 
@@ -527,7 +546,10 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             }}
           />
         ))}
-
+        <NominationsPanel
+          isOpen={showNominations}
+          onClose={() => setShowNominations(false)}
+        />
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
 
