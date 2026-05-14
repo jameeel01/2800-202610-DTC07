@@ -99,7 +99,7 @@ function ImpactEstimatePage() {
     <div className="min-h-screen bg-[#f0f7f0] px-4 py-6">
       {/* Back button */}
       <button
-        onClick={() => navigate(`/nomination/${id}`)}
+        onClick={() => navigate("/map")}
         className="flex items-center gap-1 text-sm text-gray-500 mb-6"
       >
         Back

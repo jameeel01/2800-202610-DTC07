@@ -4,7 +4,7 @@ import L from "leaflet";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
-function NominationsPanel() {
+function NominationsPanel({ onNominationSelect }) {
   const map = useMap();
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +35,11 @@ function NominationsPanel() {
     const lng = nomination.location?.longitude;
     if (lat && lng) {
       map.flyTo([lat, lng], 16, { animate: true, duration: 0.8 });
-      setIsOpen(false);
     }
+    if (onNominationSelect) {
+      onNominationSelect(nomination);
+    }
+    setIsOpen(false);
   };
 
   const handleTouchStart = (e) => {
