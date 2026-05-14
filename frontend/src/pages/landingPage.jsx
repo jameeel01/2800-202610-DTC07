@@ -50,7 +50,7 @@ function Hero() {
             to="/signup"
             className="block w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl text-center text-base sm:text-lg transition-colors shadow-lg"
           >
-            Create a Free Account
+            Log In or Sign Up
           </Link>
           <Link
             to="/map"

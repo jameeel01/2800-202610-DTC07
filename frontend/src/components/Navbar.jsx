@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, LogIn, UserPlus, X, LogOut } from "lucide-react";
+import { Home, Map, LogIn, X, LogOut } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
@@ -27,8 +27,7 @@ function Navbar() {
     : [
       { to: "/", label: "Home", icon: Home },
       { to: "/map", label: "Map", icon: Map },
-      { to: "/login", label: "Login", icon: LogIn },
-      { to: "/signup", label: "Sign Up", icon: UserPlus },
+      { to: "/login", label: "Log In", icon: LogIn },
     ];
 
   const closeMenu = () => setIsOpen(false);
