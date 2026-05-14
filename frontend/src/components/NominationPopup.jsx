@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { calculateTreeCount, calculateTempReduction, calculateShadeArea } from "../utils/shadeCalc";
+
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function formatImpactSummary(upvotes) {
   const trees = calculateTreeCount(upvotes);
@@ -8,8 +11,11 @@ function formatImpactSummary(upvotes) {
   return `${temp}°C • ${trees} ${trees === 1 ? "tree" : "trees"} • ${shade} m²`;
 }
 
-function NominationPopup({ nomination, onClose }) {
+function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
   const navigate = useNavigate();
+  const [upvoteCount, setUpvoteCount] = useState(nomination.upvoteCount);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvoting, setUpvoting] = useState(false);
 
   if (!nomination) return null;
 
@@ -17,16 +23,38 @@ function NominationPopup({ nomination, onClose }) {
     ? nomination.description.slice(0, 80) + "..."
     : nomination.description;
 
+  const handleUpvote = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setUpvoting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/nominations/${nomination._id}/upvote`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUpvoteCount(data.upvoteCount);
+        setHasUpvoted(data.hasUpvoted);
+        if (onUpvoteSuccess) onUpvoteSuccess(nomination._id, data.upvoteCount);
+      }
+    } catch (err) {
+      // silently fail
+    } finally {
+      setUpvoting(false);
+    }
+  };
+
   return (
     <>
       {/* invisible backdrop to close popup */}
       <div
         onClick={onClose}
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 1099,
-        }}
+        style={{ position: "absolute", inset: 0, zIndex: 1099 }}
       />
 
       {/* popup card */}
@@ -75,16 +103,6 @@ function NominationPopup({ nomination, onClose }) {
           {nomination.title}
         </p>
 
-        {/* upvote count */}
-        <p style={{
-          fontSize: "13px",
-          fontWeight: "600",
-          color: "#344e41",
-          margin: "0 0 8px",
-        }}>
-          {nomination.upvoteCount} upvotes
-        </p>
-
         {/* description excerpt */}
         {descriptionExcerpt && (
           <p style={{
@@ -104,26 +122,47 @@ function NominationPopup({ nomination, onClose }) {
           color: "#344e41",
           margin: "0 0 14px",
         }}>
-          Estimated impact: {formatImpactSummary(nomination.upvoteCount)}
+          Estimated impact: {formatImpactSummary(upvoteCount)}
         </p>
 
-        {/* view details button */}
-        <button
-          onClick={() => navigate(`/nomination/${nomination._id}/impact`)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            background: "#344e41",
-            color: "white",
-            border: "none",
-            borderRadius: "2px",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          View Details
-        </button>
+        {/* upvote + view details buttons */}
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={handleUpvote}
+            disabled={upvoting}
+            style={{
+              flex: 1,
+              padding: "10px",
+              background: hasUpvoted ? "white" : "#344e41",
+              color: hasUpvoted ? "#344e41" : "white",
+              border: hasUpvoted ? "1px solid #344e41" : "none",
+              borderRadius: "2px",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+              opacity: upvoting ? 0.6 : 1,
+            }}
+          >
+            {upvoteCount} upvotes
+          </button>
+
+          <button
+            onClick={() => navigate(`/nomination/${nomination._id}/impact`)}
+            style={{
+              flex: 1,
+              padding: "10px",
+              background: "#f0f7f0",
+              color: "#344e41",
+              border: "1px solid #344e41",
+              borderRadius: "2px",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            View Details
+          </button>
+        </div>
       </div>
     </>
   );
