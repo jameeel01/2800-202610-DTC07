@@ -26,34 +26,39 @@ const aiMarker = (index) =>
   });
 
 function AISuggester({ suggestions }) {
+  if (!suggestions || !Array.isArray(suggestions)) return null;
+
   return (
     <>
-      {suggestions.map((s, i) => (
-        <Marker key={i} position={[s.lat, s.lng]} icon={aiMarker(i)}>
-          {" "}
-          {/* pass i here */}
-          <Popup>
-            <div style={{ maxWidth: "200px" }}>
-              <p
-                style={{
-                  fontWeight: "700",
-                  color: "#1a3a0f",
-                  margin: "0 0 4px",
-                }}
-              >
-                🌿 AI Shade Recommendation #{i + 1}
-              </p>
-              <p style={{ fontSize: "13px", color: "#333", margin: "0 0 8px" }}>
-                {s.reason}
-              </p>
-              <p style={{ fontSize: "11px", color: "#888", margin: 0 }}>
-                Based on Vancouver tree density data. This is an AI estimate,
-                not official city data.
-              </p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {suggestions.map((s, i) => {
+        if (!s.lat || !s.lng) return null;
+        return (
+          <Marker key={i} position={[s.lat, s.lng]} icon={aiMarker(i)}>
+            <Popup>
+              <div style={{ maxWidth: "200px" }}>
+                <p
+                  style={{
+                    fontWeight: "700",
+                    color: "#1a3a0f",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  AI Shade Recommendation #{i + 1}
+                </p>
+                <p
+                  style={{ fontSize: "13px", color: "#333", margin: "0 0 8px" }}
+                >
+                  {s.reason}
+                </p>
+                <p style={{ fontSize: "11px", color: "#888", margin: 0 }}>
+                  Based on Vancouver tree density data. This is an AI estimate,
+                  not official city data.
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </>
   );
 }
