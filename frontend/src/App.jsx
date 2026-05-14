@@ -2,8 +2,7 @@ import "./App.css";
 import LandingPage from "./pages/landingPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import AuthPage from "./pages/AuthPage";
 import ImpactEstimatePage from "./pages/ImpactEstimatePage";
 import Home from "./pages/Home";
 import { useState } from "react";
@@ -40,8 +39,8 @@ function App() {
               />
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
           <Route
             path="/nomination/:id/impact"
             element={<ImpactEstimatePage />}
