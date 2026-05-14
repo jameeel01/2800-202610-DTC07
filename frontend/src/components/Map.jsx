@@ -10,17 +10,22 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import { OnboardingTour, TourRestartButton } from "./OnboardingTour";
-import BlueMarker from "../assets/BlueMarker.svg";
 import HeatmapLayer from "./HeatMapLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
-import BlackMarker from "../assets/BlackMarker.svg";
 import NominationsPanel from "./NominationsPanel";
 
+const blackmarker = L.icon({
+  iconUrl: "/ShadedPin.png",
+  iconSize: [32, 42],
+  iconAnchor: [16, 42],
+  popupAnchor: [0, -38],
+});
+
 const bluemarker = L.icon({
-  iconUrl: BlueMarker,
-  iconSize: [38, 48],
-  iconAnchor: [19, 48],
+  iconUrl: "/ShadedPinHighlighted.png",
+  iconSize: [32, 42],
+  iconAnchor: [16, 42],
   popupAnchor: [0, -38],
 });
 
@@ -355,6 +360,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [notification, setNotification] = useState(null);
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
+  const [selectedNominationId, setSelectedNominationId] = useState(null);
   const tourRestartRef = useRef(null);
   const navigate = useNavigate();
 
@@ -538,21 +544,36 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {/* existing nominations from backend */}
+        {nominations.map((n) => {
+          const lat = n.location?.latitude;
+          const lng = n.location?.longitude;
+          if (!lat || !lng) return null;
+          const isSelected = selectedNominationId === n._id;
+          return (
+            <Marker
+              key={n._id}
+              position={[lat, lng]}
+              icon={isSelected ? bluemarker : blackmarker}
+              eventHandlers={{
+                click: () => {
+                  setSelectedNominationId(n._id);
+                  setSelectedNomination(n);
+                },
+              }}
+            />
+          );
+        })}
 
-        {/* render existing nominations from backend as black markers */}
-        {nominations.map((nomination) => (
+        {/* pins placed in current session */}
+        {pins.map((pin) => (
           <Marker
-            key={nomination._id}
-            position={[
-              nomination.location.latitude,
-              nomination.location.longitude,
-            ]}
-            icon={L.icon({
-              iconUrl: BlackMarker,
-              iconSize: [32, 40],
-              iconAnchor: [16, 40],
-              popupAnchor: [0, -40],
-            })}
+            key={pin.id}
+            position={pin.latlng}
+            icon={bluemarker}
+            eventHandlers={{
+              click: () => setActivePin(pin),
+            }}
           />
         ))}
         <NominationsPanel
