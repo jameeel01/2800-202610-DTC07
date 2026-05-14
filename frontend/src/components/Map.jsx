@@ -22,6 +22,7 @@ const blackmarker = L.icon({
   iconAnchor: [16, 42],
   popupAnchor: [0, -38],
 });
+import AISuggester from "./AISuggester";
 
 const bluemarker = L.icon({
   iconUrl: "/ShadedPinHighlighted.png",
@@ -363,8 +364,58 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [showNominations, setShowNominations] = useState(false);
   const [selectedNominationId, setSelectedNominationId] = useState(null);
   const [selectedNomination, setSelectedNomination] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
   const tourRestartRef = useRef(null);
   const navigate = useNavigate();
+
+  //AI suggestions
+  const handleAISuggest = async () => {
+    setAiLoading(true);
+    try {
+      // Mock Suggestions to refrain from burning api calls
+      const mockSuggestions = [
+        {
+          lat: 49.2827,
+          lng: -123.1207,
+          reason: "Busy downtown intersection with minimal tree canopy.",
+        },
+        {
+          lat: 49.2662,
+          lng: -123.161,
+          reason: "West 4th Ave commercial strip with high sun exposure.",
+        },
+        {
+          lat: 49.2608,
+          lng: -123.1009,
+          reason: "Main Street with limited mature street trees.",
+        },
+      ];
+      setSuggestions(mockSuggestions);
+      // const res = await fetch(
+      //   `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/ai/suggest`,
+      //   {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ treeData: [], nominations: [] }),
+      //   },
+      // );
+      // const data = await res.json();
+      // if (data.suggestions && Array.isArray(data.suggestions)) {
+      //   setSuggestions(data.suggestions);
+      // } else {
+      //   console.error("Invalid suggestions format:", JSON.stringify(data));
+      // }
+    } catch (err) {
+      console.error("AI suggest failed:", err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+  // Removes AI suggestion
+  const handleRemoveSuggestion = (index) => {
+    setSuggestions((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const showNotification = (message) => {
     setNotification(message);
@@ -504,7 +555,41 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           ✓ {notification}
         </div>
       )}
-
+      {/* AI loading banner */}
+      {aiLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1001,
+            background: "#1a1a2e",
+            color: "#4fc3f7",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <img
+            src="/src/assets/ai.png"
+            width="24"
+            height="24"
+            style={{
+              marginRight: "6px",
+              filter:
+                "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
+            }}
+          />
+          Finding the best spots for shade...
+        </div>
+      )}
       {/* Pin drop banner */}
       {isPinDropMode && !activePin && (
         <div
@@ -577,7 +662,6 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
             />
           );
         })}
-
         {/* pins placed in current session */}
         {pins.map((pin) => (
           <Marker
@@ -598,7 +682,51 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           }}
         />
         <HeatmapLayer></HeatmapLayer>
+        <AISuggester
+          suggestions={suggestions}
+          onRemove={handleRemoveSuggestion}
+        />{" "}
       </MapContainer>
+      {/*AI button*/}
+      {!activePin && (
+        <button
+          onClick={handleAISuggest}
+          style={{
+            position: "absolute",
+            bottom: "64px",
+            right: "12px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#1a1a2e",
+            color: "#4fc3f7",
+            border: "2px solid #4fc3f7",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {aiLoading ? (
+            "Finding spots..."
+          ) : (
+            <>
+              <img
+                src="/src/assets/ai.png"
+                width="32"
+                height="32"
+                style={{
+                  marginRight: "6px",
+                  filter:
+                    "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
+                }}
+              />
+              Suggest a Spot
+            </>
+          )}
+        </button>
+      )}
 
       {/* desktop nomination */}
       {activePin && (
@@ -620,7 +748,48 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         onRemove={handleRemove}
         pin={activePin}
       />
+      {/*AI Suggested Spot Count Card */}
+      {suggestions.length > 0 && !activePin && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "180px",
+            right: "20px",
+            zIndex: 1000,
+            background: "#1a1a2e",
+            color: "white",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: "600",
+            border: "2px solid #f59e0b",
+          }}
+        >
+          {suggestions.length} AI Suggested Spot(s)
+        </div>
+      )}
 
+      {suggestions.length > 0 && !activePin && (
+        <button
+          onClick={() => setSuggestions([])}
+          style={{
+            position: "absolute",
+            bottom: "130px",
+            right: "10px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#1a1a2e",
+            color: "#ef4444",
+            border: "2px solid #ef4444",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+          }}
+        >
+          ✕ Clear AI Suggestions
+        </button>
+      )}
       {!activePin && (
         <button
           onClick={() => {
