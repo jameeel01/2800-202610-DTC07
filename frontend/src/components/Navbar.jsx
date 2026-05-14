@@ -70,7 +70,7 @@ function Navbar() {
         </span>
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className="w-10 h-10 flex flex-col justify-center items-center gap-1.25 rounded-xl hover:bg-gray-800 transition-colors"
+          className="w-10 h-10 flex flex-col justify-center items-center gap-1.25 hover:bg-gray-800 transition-colors"
           aria-label="Toggle menu"
         >
           {isOpen ? (
