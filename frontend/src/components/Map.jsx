@@ -371,7 +371,12 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         },
       );
       const data = await res.json();
-      setSuggestions(data.suggestions);
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        // replace setSuggestions with this
+        setSuggestions(data.suggestions);
+      } else {
+        console.error("Invalid suggestions format:", JSON.stringify(data));
+      }
     } catch (err) {
       console.error("AI suggest failed:", err);
     } finally {

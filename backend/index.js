@@ -381,26 +381,20 @@ app.post("/api/ai/suggest", async (req, res) => {
     const { treeData, nominations } = req.body;
 
     const prompt = `
-      You are a urban shade planning assistant for Vancouver, Canada.
-      
-      Here are the current street tree locations (lat/lng):
-      ${JSON.stringify(treeData)}
-      
-      Here are existing approved nominations:
-      ${JSON.stringify(nominations)}
-      
-      Based on areas with low tree density and no existing nominations, suggest 3 specific spots in Vancouver that most need shade. 
-      
-      Respond ONLY with a JSON array, no markdown, no explanation, just the array:
-      [
-        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
-      ]
+    You are an urban shade planning assistant for Vancouver, Canada.
+    
+    Suggest 3 specific spots in Vancouver that most need shade based on known high-traffic, low-canopy areas.
+    
+    Respond ONLY with a JSON array, no markdown, no explanation, just the array:
+    [
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
+    ]
     `;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -412,8 +406,34 @@ app.post("/api/ai/suggest", async (req, res) => {
 
     const data = await response.json();
     console.log("Gemini response:", JSON.stringify(data));
+
+    if (data.error) {
+      const code = data.error.code;
+      if (code === 503)
+        return res.status(503).json({ error: "AI is busy, please try again." });
+      if (code === 429)
+        return res.status(429).json({ error: "AI daily limit reached." });
+      if (code === 400)
+        return res.status(400).json({ error: "AI API key issue." });
+      return res.status(500).json({ error: "AI request failed." });
+    }
+
     const text = data.candidates[0].content.parts[0].text;
-    const suggestions = JSON.parse(text);
+
+    let suggestions;
+    try {
+      suggestions = JSON.parse(text);
+    } catch {
+      return res
+        .status(500)
+        .json({ error: "AI returned an unexpected response. Try again." });
+    }
+
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+      return res
+        .status(500)
+        .json({ error: "AI couldn't find suggestions. Try again." });
+    }
 
     res.json({ suggestions });
   } catch (error) {
