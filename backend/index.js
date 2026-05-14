@@ -287,7 +287,9 @@ app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
       nomination.upvoterIds = [];
     }
 
-    const hasUpvoted = nomination.upvoterIds.map(String).includes(String(userId));
+    const hasUpvoted = nomination.upvoterIds
+      .map(String)
+      .includes(String(userId));
 
     if (hasUpvoted) {
       // remove upvote
@@ -370,6 +372,53 @@ app.get("/api/impact/:upvotes", (req, res) => {
   } catch (error) {
     console.error("Impact calculation error:", error.message);
     res.status(500).json({ error: "Failed to calculate impact" });
+  }
+});
+
+// Gemini backend route
+app.post("/api/ai/suggest", async (req, res) => {
+  try {
+    const { treeData, nominations } = req.body;
+
+    const prompt = `
+      You are a urban shade planning assistant for Vancouver, Canada.
+      
+      Here are the current street tree locations (lat/lng):
+      ${JSON.stringify(treeData)}
+      
+      Here are existing approved nominations:
+      ${JSON.stringify(nominations)}
+      
+      Based on areas with low tree density and no existing nominations, suggest 3 specific spots in Vancouver that most need shade. 
+      
+      Respond ONLY with a JSON array, no markdown, no explanation, just the array:
+      [
+        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+        { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
+      ]
+    `;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      },
+    );
+
+    const data = await response.json();
+    console.log("Gemini response:", JSON.stringify(data));
+    const text = data.candidates[0].content.parts[0].text;
+    const suggestions = JSON.parse(text);
+
+    res.json({ suggestions });
+  } catch (error) {
+    console.error("AI suggest error:", error.message);
+    res.status(500).json({ error: "Failed to generate suggestions" });
   }
 });
 
