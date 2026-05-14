@@ -35,10 +35,9 @@ function HeatmapLayer() {
 
   const handleToggle = () => {
     if (!heatLayerRef.current) return;
-    if (showHeatMap) {
-      map.removeLayer(heatLayerRef.current);
-    } else {
-      heatLayerRef.current.addTo(map);
+    const canvas = heatLayerRef.current._canvas;
+    if (canvas) {
+      canvas.style.display = showHeatMap ? "none" : "";
     }
     setShowHeatMap((prev) => !prev);
   };
