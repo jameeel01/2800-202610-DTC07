@@ -7,6 +7,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import { OnboardingTour, TourRestartButton } from "./OnboardingTour";
 import BlueMarker from "../assets/BlueMarker.svg";
@@ -355,6 +356,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
   const tourRestartRef = useRef(null);
+  const navigate = useNavigate();
 
   const showNotification = (message) => {
     setNotification(message);
@@ -581,46 +583,34 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         pin={activePin}
       />
 
-      {/* nominate button — shows based on login state */}
-      {!activePin &&
-        (localStorage.getItem("token") ? (
-          <button
-            onClick={() => setIsPinDropMode(true)}
-            style={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              zIndex: 1000,
-              padding: "10px 18px",
-              background: "#2d6a0f",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "14px",
-            }}
-          >
-            Nominate +
-          </button>
-        ) : (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              zIndex: 1000,
-              padding: "10px 18px",
-              background: "#555",
-              color: "white",
-              borderRadius: "8px",
-              fontSize: "14px",
-              fontWeight: "bold",
-            }}
-          >
-            Log in to nominate
-          </div>
-        ))}
+      {!activePin && (
+        <button
+          onClick={() => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              navigate("/login");
+            } else {
+              setIsPinDropMode(true);
+            }
+          }}
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            right: "20px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#2d6a0f",
+            color: "white",
+            border: "none",
+            borderRadius: "2px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+          }}
+        >
+          Nominate +
+        </button>
+      )}
     </div>
   );
 }

@@ -204,21 +204,17 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
           <div className="flex flex-col gap-2.5">
             <button
               onClick={() => onSubmit({ pin, locationName, reason })}
-              className="w-full py-3 bg-[#344e41] text-white rounded-xl text-[15px] font-bold"
+              className="w-full py-3 bg-[#344e41] text-white text-[15px] font-bold"
+              style={{ borderRadius: "2px" }}
             >
               Submit Nomination
             </button>
             <button
               onClick={onClose}
-              className="w-full py-3 bg-[#3a5a40] text-white rounded-xl text-[15px] font-semibold"
+              className="w-full py-3 bg-white border border-[#344e41] text-[#344e41] text-[15px] font-semibold"
+              style={{ borderRadius: "2px" }}
             >
               Cancel
-            </button>
-            <button
-              onClick={() => onRemove(pin.id)}
-              className="w-full py-3 bg-white text-[#8b1a1a] border-2 border-[#e8a0a0] rounded-xl text-[15px] font-semibold"
-            >
-              Remove Pin
             </button>
           </div>
         </div>
