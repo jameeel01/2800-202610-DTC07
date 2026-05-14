@@ -15,6 +15,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
 import BlackMarker from "../assets/BlackMarker.svg";
 import NominationsPanel from "./NominationsPanel";
+import AISuggester from "./AISuggester";
 
 const bluemarker = L.icon({
   iconUrl: BlueMarker,
@@ -354,8 +355,29 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [notification, setNotification] = useState(null);
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
   const tourRestartRef = useRef(null);
 
+  const handleAISuggest = async () => {
+    setAiLoading(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/ai/suggest`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ treeData: [], nominations: [] }),
+        },
+      );
+      const data = await res.json();
+      setSuggestions(data.suggestions);
+    } catch (err) {
+      console.error("AI suggest failed:", err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
   const showNotification = (message) => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);
@@ -551,7 +573,30 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           onClose={() => setShowNominations(false)}
         />
         <HeatmapLayer></HeatmapLayer>
+        <AISuggester suggestions={suggestions}></AISuggester>
       </MapContainer>
+      {/*AI button*/}
+      {!activePin && (
+        <button
+          onClick={handleAISuggest}
+          style={{
+            position: "absolute",
+            bottom: "64px",
+            right: "20px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#1a1a2e",
+            color: "#4fc3f7",
+            border: "2px solid #4fc3f7",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+          }}
+        >
+          {aiLoading ? "Finding spots..." : "✨ Suggest a Spot"}
+        </button>
+      )}
 
       {/* desktop nomination */}
       {activePin && (
