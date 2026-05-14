@@ -14,6 +14,7 @@ import HeatmapLayer from "./HeatMapLayer";
 import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
 import NominationsPanel from "./NominationsPanel";
+import NominationPopup from "./NominationPopup";
 
 const blackmarker = L.icon({
   iconUrl: "/ShadedPin.png",
@@ -361,6 +362,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
   const [selectedNominationId, setSelectedNominationId] = useState(null);
+  const [selectedNomination, setSelectedNomination] = useState(null);
   const tourRestartRef = useRef(null);
   const navigate = useNavigate();
 
@@ -466,6 +468,17 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
 
       {/* Restart tour button, always visible bottom-left */}
       <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
+
+      {/* nomination popup */}
+      {selectedNomination && (
+        <NominationPopup
+          nomination={selectedNomination}
+          onClose={() => {
+            setSelectedNomination(null);
+            setSelectedNominationId(null);
+          }}
+        />
+      )}
 
       {notification && (
         <div
@@ -579,6 +592,10 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         <NominationsPanel
           isOpen={showNominations}
           onClose={() => setShowNominations(false)}
+          onNominationSelect={(nomination) => {
+            setSelectedNomination(nomination);
+            setSelectedNominationId(nomination._id);
+          }}
         />
         <HeatmapLayer></HeatmapLayer>
       </MapContainer>
