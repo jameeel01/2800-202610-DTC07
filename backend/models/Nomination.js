@@ -67,7 +67,8 @@ const nominationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    // users who upvoted
+
+    // users who have upvoted (for toggle logic)
     upvoterIds: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -271,6 +271,46 @@ app.get("/api/nominations/:id", async (req, res) => {
   }
 });
 
+// upvote or un-upvote a nomination (requires login)
+app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
+  try {
+    const nomination = await Nomination.findById(req.params.id);
+
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    const userId = req.user.userId;
+
+    // default upvoterIds to empty array if it doesn't exist yet
+    if (!nomination.upvoterIds) {
+      nomination.upvoterIds = [];
+    }
+
+    const hasUpvoted = nomination.upvoterIds.map(String).includes(String(userId));
+
+    if (hasUpvoted) {
+      // remove upvote
+      nomination.upvoterIds.pull(userId);
+      nomination.upvoteCount = Math.max(0, nomination.upvoteCount - 1);
+    } else {
+      // add upvote
+      nomination.upvoterIds.push(userId);
+      nomination.upvoteCount += 1;
+    }
+
+    await nomination.save();
+
+    res.json({
+      upvoteCount: nomination.upvoteCount,
+      hasUpvoted: !hasUpvoted,
+    });
+  } catch (error) {
+    console.error("Upvote error:", error.message);
+    res.status(500).json({ error: "Failed to upvote" });
+  }
+});
+
 app.get("/api/users", (req, res) => {
   res.json({
     users: [

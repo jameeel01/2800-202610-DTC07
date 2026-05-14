@@ -11,7 +11,7 @@ import PlazaIcon from "../assets/school-yard.svg";
 import SidewalkIcon from "../assets/bus-stop.svg";
 import OtherIcon from "../assets/bus-stop.svg";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 const FILTERS = ["All", "Recent", "Most Upvoted", "Mine"];
 const categoryIcons = {
   park: ParkIcon,
@@ -95,15 +95,184 @@ function NominationCard({ nomination, onClick }) {
   );
 }
 
+function NominationDetail({ nomination, onBack, onUpvote }) {
+  const trees = calculateTreeCount(nomination.upvoteCount);
+  const temp = calculateTempReduction(trees);
+  const shade = calculateShadeArea(trees);
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
+      {/* back button */}
+      <button
+        onClick={onBack}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#344e41",
+          fontWeight: "600",
+          fontSize: "13px",
+          cursor: "pointer",
+          padding: "0 0 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* title and status */}
+      <div style={{ marginBottom: "12px" }}>
+        <span
+          style={{
+            background: "#344e41",
+            color: "white",
+            fontSize: "10px",
+            padding: "2px 8px",
+            borderRadius: "12px",
+            fontWeight: "600",
+          }}
+        >
+          {nomination.status || "pending"}
+        </span>
+        <h2
+          style={{
+            fontSize: "18px",
+            fontWeight: "700",
+            color: "#1a3a0f",
+            margin: "6px 0 2px",
+          }}
+        >
+          {nomination.title}
+        </h2>
+        <p style={{ fontSize: "12px", color: "#588157", margin: 0 }}>
+          {nomination.location?.streetAddress}
+        </p>
+      </div>
+
+      {/* description */}
+      <div
+        style={{
+          background: "white",
+          borderRadius: "10px",
+          padding: "12px",
+          marginBottom: "12px",
+          border: "1px solid #b5d48a",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "13px",
+            color: "#344e41",
+            margin: 0,
+            lineHeight: "1.5",
+          }}
+        >
+          {nomination.description}
+        </p>
+      </div>
+
+      {/* impact stats */}
+      <div
+        style={{
+          background: "#c8d8b0",
+          borderRadius: "10px",
+          padding: "12px",
+          marginBottom: "12px",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            color: "#1a3a0f",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            marginBottom: "8px",
+          }}
+        >
+          🌳 Estimated Impact
+        </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "8px",
+          }}
+        >
+          {[
+            { label: "Avg Temp Reduction", value: `-${temp}°C` },
+            { label: "Trees Planted", value: `${trees}` },
+            { label: "Shade Coverage", value: `${shade}m²` },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              style={{
+                background: "white",
+                borderRadius: "8px",
+                padding: "8px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  color: "#344e41",
+                  margin: 0,
+                }}
+              >
+                {value}
+              </p>
+              <p style={{ fontSize: "10px", color: "#588157", margin: "2px 0 0" }}>
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* nominated by */}
+      <p style={{ fontSize: "12px", color: "#888", marginBottom: "16px" }}>
+        Nominated by {nomination.nominatorName}
+      </p>
+
+      {/* upvote button */}
+      <button
+        onClick={() => onUpvote(nomination._id)}
+        style={{
+          width: "100%",
+          padding: "14px",
+          background: nomination.hasUpvoted ? "white" : "#344e41",
+          color: nomination.hasUpvoted ? "#344e41" : "white",
+          border: nomination.hasUpvoted ? "2px solid #344e41" : "none",
+          borderRadius: "12px",
+          fontSize: "15px",
+          fontWeight: "700",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
+        {nomination.hasUpvoted ? " Upvoted" : " Upvote"} · {nomination.upvoteCount}
+      </button>
+    </div>
+  );
+}
+
 function NominationsPanel() {
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedNomination, setSelectedNomination] = useState(null);
   const startY = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/nominations`)
@@ -117,6 +286,43 @@ function NominationsPanel() {
         setLoading(false);
       });
   }, []);
+
+  const handleUpvote = async (id) => {
+    if (!token) {
+      alert("You must be logged in to upvote.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/nominations/${id}/upvote`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) return;
+
+      // update upvote count and hasUpvoted in local state
+      setNominations((prev) =>
+        prev.map((n) =>
+          n._id === id
+            ? { ...n, upvoteCount: data.upvoteCount, hasUpvoted: data.hasUpvoted }
+            : n
+        )
+      );
+
+      // update selected nomination if open
+      setSelectedNomination((prev) =>
+        prev && prev._id === id
+          ? { ...prev, upvoteCount: data.upvoteCount, hasUpvoted: data.hasUpvoted }
+          : prev
+      );
+    } catch (err) {
+      console.error("Upvote error:", err);
+    }
+  };
 
   const handleTouchStart = (e) => {
     startY.current = e.touches[0].clientY;
@@ -211,52 +417,66 @@ function NominationsPanel() {
             margin: 0,
           }}
         >
-          Nominations
+          {selectedNomination ? "Nomination Detail" : "Nominations"}
         </h2>
       </div>
 
-      {/* filter tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          padding: "0 16px 12px",
-          overflowX: "auto",
-        }}
-      >
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setActiveFilter(f)}
-            style={{
-              padding: "5px 14px",
-              borderRadius: "20px",
-              border: "1.5px solid #344e41",
-              background: activeFilter === f ? "#344e41" : "white",
-              color: activeFilter === f ? "white" : "#344e41",
-              fontWeight: "600",
-              fontSize: "12px",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+      {/* filter tabs — only show on list view */}
+      {!selectedNomination && (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            padding: "0 16px 12px",
+            overflowX: "auto",
+          }}
+        >
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              style={{
+                padding: "5px 14px",
+                borderRadius: "20px",
+                border: "1.5px solid #344e41",
+                background: activeFilter === f ? "#344e41" : "white",
+                color: activeFilter === f ? "white" : "#344e41",
+                fontWeight: "600",
+                fontSize: "12px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
-        {loading && <p style={{ color: "#666" }}>Loading...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {!loading && !error && filtered.length === 0 && (
-          <p style={{ color: "#666" }}>No nominations found.</p>
-        )}
-        {filtered.map((n) => (
-          <NominationCard key={n._id} nomination={n} onClick={() => {}} />
-        ))}
-      </div>
+      {/* list or detail view */}
+      {selectedNomination ? (
+        <NominationDetail
+          nomination={selectedNomination}
+          onBack={() => setSelectedNomination(null)}
+          onUpvote={handleUpvote}
+        />
+      ) : (
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
+          {loading && <p style={{ color: "#666" }}>Loading...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          {!loading && !error && filtered.length === 0 && (
+            <p style={{ color: "#666" }}>No nominations found.</p>
+          )}
+          {filtered.map((n) => (
+            <NominationCard
+              key={n._id}
+              nomination={n}
+              onClick={setSelectedNomination}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
