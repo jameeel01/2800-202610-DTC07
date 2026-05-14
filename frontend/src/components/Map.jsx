@@ -505,7 +505,41 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           ✓ {notification}
         </div>
       )}
-
+      {/* AI loading banner */}
+      {aiLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1001,
+            background: "#1a1a2e",
+            color: "#4fc3f7",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <img
+            src="/src/assets/ai.png"
+            width="24"
+            height="24"
+            style={{
+              marginRight: "6px",
+              filter:
+                "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
+            }}
+          />
+          Finding the best spots for shade...
+        </div>
+      )}
       {/* Pin drop banner */}
       {isPinDropMode && !activePin && (
         <div
@@ -582,7 +616,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           style={{
             position: "absolute",
             bottom: "64px",
-            right: "20px",
+            right: "12px",
             zIndex: 1000,
             padding: "10px 18px",
             background: "#1a1a2e",
@@ -592,9 +626,27 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             cursor: "pointer",
             fontWeight: "bold",
             fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          {aiLoading ? "Finding spots..." : "✨ Suggest a Spot"}
+          {aiLoading ? (
+            "Finding spots..."
+          ) : (
+            <>
+              <img
+                src="/src/assets/ai.png"
+                width="32"
+                height="32"
+                style={{
+                  marginRight: "6px",
+                  filter:
+                    "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
+                }}
+              />
+              Suggest a Spot
+            </>
+          )}
         </button>
       )}
 
@@ -618,6 +670,26 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         onRemove={handleRemove}
         pin={activePin}
       />
+      {/*AI Legend Card */}
+      {suggestions.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "120px",
+            right: "20px",
+            zIndex: 1000,
+            background: "#1a1a2e",
+            color: "white",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: "600",
+            border: "2px solid #f59e0b",
+          }}
+        >
+          🟡 {suggestions.length} AI Suggested Spots
+        </div>
+      )}
 
       {!activePin && (
         <button
