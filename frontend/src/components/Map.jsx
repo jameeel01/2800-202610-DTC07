@@ -749,7 +749,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         pin={activePin}
       />
       {/*AI Suggested Spot Count Card */}
-      {suggestions.length > 0 && (
+      {suggestions.length > 0 && !activePin && (
         <div
           style={{
             position: "absolute",
