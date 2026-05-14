@@ -7,6 +7,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import { OnboardingTour, TourRestartButton } from "./OnboardingTour";
 import BlueMarker from "../assets/BlueMarker.svg";
@@ -355,6 +356,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
   const tourRestartRef = useRef(null);
+  const navigate = useNavigate();
 
   const showNotification = (message) => {
     setNotification(message);
@@ -576,7 +578,14 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
 
       {!activePin && (
         <button
-          onClick={() => setIsPinDropMode(true)}
+          onClick={() => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              navigate("/login");
+            } else {
+              setIsPinDropMode(true);
+            }
+          }}
           style={{
             position: "absolute",
             bottom: "20px",
@@ -586,7 +595,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
             background: "#2d6a0f",
             color: "white",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "2px",
             cursor: "pointer",
             fontWeight: "bold",
             fontSize: "14px",
