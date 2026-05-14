@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useMap } from "react-leaflet";
+import L from "leaflet";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
@@ -9,6 +10,15 @@ function NominationsPanel() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const startY = useRef(null);
+  const panelRef = useRef(null);
+
+  // Prevent Leaflet from intercepting clicks on the panel
+  useEffect(() => {
+    if (panelRef.current) {
+      L.DomEvent.disableClickPropagation(panelRef.current);
+      L.DomEvent.disableScrollPropagation(panelRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/nominations`)
@@ -48,6 +58,7 @@ function NominationsPanel() {
 
   return (
     <div
+      ref={panelRef}
       style={{
         position: "absolute",
         bottom: 0,
@@ -111,8 +122,19 @@ function NominationsPanel() {
               background: "white",
               borderBottom: "1px solid #e8e8e8",
               cursor: "pointer",
+              gap: "10px",
             }}
           >
+            {/* pin icon */}
+            <svg width="12" height="16" viewBox="0 0 12 16" fill="none" style={{ flexShrink: 0 }}>
+              <path
+                d="M6 0C2.686 0 0 2.686 0 6c0 4.5 6 10 6 10s6-5.5 6-10C12 2.686 9.314 0 6 0z"
+                fill="#344e41"
+              />
+              <circle cx="6" cy="6" r="2" fill="white" />
+            </svg>
+
+            {/* title truncated at city level */}
             <span style={{
               fontSize: "14px",
               fontWeight: "600",
@@ -121,10 +143,10 @@ function NominationsPanel() {
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               flex: 1,
-              marginRight: "12px",
             }}>
-              {n.title}
+              {n.title.split(", Vancouver")[0].split(", BC")[0]}
             </span>
+
             <span style={{
               fontSize: "13px",
               fontWeight: "600",

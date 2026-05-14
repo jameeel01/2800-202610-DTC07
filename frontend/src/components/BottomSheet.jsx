@@ -106,7 +106,7 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-1000 md:hidden">
-      <div className="bg-[#dad7cd] rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.15)] pb-6 overflow-hidden">
+      <div className="bg-[#f0f7f0] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] pb-6 overflow-hidden">
         {/* small non-interactive map preview centered on nomination coordinates */}
         <div className="h-36 w-full overflow-hidden">
           <MapContainer
@@ -161,7 +161,7 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
               placeholder="e.g. Riley Park Corner"
               value={locationName}
               onChange={(e) => setLocationName(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#b5d48a] bg-white text-sm text-[#555] outline-none"
+              className="w-full px-3 py-2.5 border border-[#A3B18A] bg-white text-sm text-[#555] outline-none focus:border-[#344e41]"
             />
           </div>
 
@@ -174,22 +174,22 @@ function BottomSheet({ isOpen, onClose, pin, onSubmit, onRemove }) {
               placeholder="Describe the need for shade..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border-[1.5px] border-[#b5d48a] bg-white text-sm text-[#555] outline-none h-24 resize-none"
+              className="w-full px-3 py-2.5 border border-[#A3B18A] bg-white text-sm text-[#555] outline-none focus:border-[#344e41] h-24 resize-none"
             />
           </div>
 
           {/* projected impact section */}
-          <div className="bg-[#c8d8b0] rounded-xl p-3 mb-4">
+          <div className="bg-[#ddeedd] p-3 mb-4" style={{ borderRadius: "2px" }}>
             <p className="text-[11px] font-bold text-[#1a3a0f] uppercase tracking-wide mb-2">
-              🌳 Estimated Impact — {treeCount} Trees
+              Estimated Impact — {treeCount} Trees
             </p>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: "Avg Temp Reduction", value: `-${tempReduction}°C` },
-                { label: "Trees Planted", value: `${treeCount}` },
-                { label: "Shade Coverage", value: `${shadeArea}m²` },
+                { label: "Temp Reduction", value: `-${tempReduction}°C` },
+                { label: "Trees", value: `${treeCount}` },
+                { label: "Shade", value: `${shadeArea}m²` },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-white rounded-lg p-2 text-center">
+                <div key={label} className="bg-white p-2 text-center" style={{ borderRadius: "2px" }}>
                   <p className="text-[15px] font-bold text-[#344e41] m-0">{value}</p>
                   <p className="text-[11px] text-[#588157] mt-0.5">{label}</p>
                 </div>
