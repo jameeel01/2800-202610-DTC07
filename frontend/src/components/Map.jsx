@@ -348,7 +348,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   );
 }
 
-function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
+function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -536,14 +536,21 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {pins.map((pin) => (
+
+        {/* render existing nominations from backend as black markers */}
+        {nominations.map((nomination) => (
           <Marker
-            key={pin.id}
-            position={pin.latlng}
-            icon={bluemarker}
-            eventHandlers={{
-              click: () => setActivePin(pin),
-            }}
+            key={nomination._id}
+            position={[
+              nomination.location.latitude,
+              nomination.location.longitude,
+            ]}
+            icon={L.icon({
+              iconUrl: BlackMarker,
+              iconSize: [32, 40],
+              iconAnchor: [16, 40],
+              popupAnchor: [0, -40],
+            })}
           />
         ))}
         <NominationsPanel
@@ -574,27 +581,46 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode }) {
         pin={activePin}
       />
 
-      {!activePin && (
-        <button
-          onClick={() => setIsPinDropMode(true)}
-          style={{
-            position: "absolute",
-            bottom: "20px",
-            right: "20px",
-            zIndex: 1000,
-            padding: "10px 18px",
-            background: "#2d6a0f",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-          }}
-        >
-          Nominate +
-        </button>
-      )}
+      {/* nominate button — shows based on login state */}
+      {!activePin &&
+        (localStorage.getItem("token") ? (
+          <button
+            onClick={() => setIsPinDropMode(true)}
+            style={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              zIndex: 1000,
+              padding: "10px 18px",
+              background: "#2d6a0f",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "14px",
+            }}
+          >
+            Nominate +
+          </button>
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              zIndex: 1000,
+              padding: "10px 18px",
+              background: "#555",
+              color: "white",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "bold",
+            }}
+          >
+            Log in to nominate
+          </div>
+        ))}
     </div>
   );
 }
