@@ -8,17 +8,8 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   // load user from localStorage
-  const [user] = useState(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        return JSON.parse(userData);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
+  const userData = localStorage.getItem("user");
+  const user = userData ? JSON.parse(userData) : null;
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -30,15 +21,15 @@ function Navbar() {
   // show different nav if logged in
   const links = user
     ? [
-        { to: "/", label: "Home", icon: Home },
-        { to: "/map", label: "Map", icon: Map },
-      ]
+      { to: "/home", label: "Home", icon: Home },
+      { to: "/map", label: "Map", icon: Map },
+    ]
     : [
-        { to: "/", label: "Home", icon: Home },
-        { to: "/map", label: "Map", icon: Map },
-        { to: "/login", label: "Login", icon: LogIn },
-        { to: "/signup", label: "Sign Up", icon: UserPlus },
-      ];
+      { to: "/", label: "Home", icon: Home },
+      { to: "/map", label: "Map", icon: Map },
+      { to: "/login", label: "Login", icon: LogIn },
+      { to: "/signup", label: "Sign Up", icon: UserPlus },
+    ];
 
   const closeMenu = () => setIsOpen(false);
 
@@ -52,9 +43,8 @@ function Navbar() {
             <Link
               key={to}
               to={to}
-              className={`flex flex-col items-center gap-1 text-xs ${
-                isActive ? "text-[#a3b18a]" : "text-gray-400"
-              }`}
+              className={`flex flex-col items-center gap-1 text-xs ${isActive ? "text-[#a3b18a]" : "text-gray-400"
+                }`}
             >
               <Icon size={22} />
               {label}
@@ -99,18 +89,16 @@ function Navbar() {
       {/* Backdrop (mobile only) */}
       <div
         onClick={closeMenu}
-        className={`sm:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`sm:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
       />
 
       {/* Slide-in drawer (mobile only) */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-56 bg-[#344e41] border-l border-[#344e41] z-[1001] pt-16 transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 bottom-0 w-56 bg-[#344e41] border-l border-[#344e41] z-[1001] pt-16 transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {links.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to;
@@ -119,11 +107,10 @@ function Navbar() {
               key={to}
               to={to}
               onClick={closeMenu}
-              className={`flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] transition-all duration-150 ${
-                isActive
-                  ? "text-[#a3b18a] border-[#ad7cd] bg-green-400/10"
-                  : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-700"
-              }`}
+              className={`flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] transition-all duration-150 ${isActive
+                ? "text-[#a3b18a] border-[#ad7cd] bg-green-400/10"
+                : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-700"
+                }`}
             >
               <Icon size={20} />
               {label}

@@ -1,11 +1,11 @@
 import "./App.css";
 import LandingPage from "./pages/landingPage";
-// import LeafletMap from "./components/Map.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ImpactEstimatePage from "./pages/ImpactEstimatePage";
+import Home from "./pages/Home";
 import { useState } from "react";
 import MapPage from "./pages/MapPage";
 
@@ -18,6 +18,7 @@ function App() {
           // Pages that do not need the navbar
         }
         <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<Home />} />
 
         {
           // Pages that do need the navbar
