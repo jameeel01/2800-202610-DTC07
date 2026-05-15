@@ -17,6 +17,10 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
 
+  // check if this nomination belongs to the logged in user
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isOwner = user && String(nomination.nominatorId) === String(user.id);
+
   if (!nomination) return null;
 
   const descriptionExcerpt = nomination.description?.length > 80
@@ -71,6 +75,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
           padding: "16px",
           width: "280px",
           fontFamily: "sans-serif",
+          borderRadius: "12px",
         }}
       >
         {/* close button */}
@@ -91,16 +96,43 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
           x
         </button>
 
+        {/* your nomination badge */}
+        {isOwner && (
+          <span
+            style={{
+              display: "inline-block",
+              background: "#344e41",
+              color: "white",
+              fontSize: "10px",
+              fontWeight: "700",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              marginBottom: "6px",
+            }}
+          >
+            Your Nomination
+          </span>
+        )}
+
         {/* title */}
         <p style={{
           fontSize: "15px",
           fontWeight: "700",
           color: "#1a3a0f",
-          margin: "0 0 6px",
+          margin: "0 0 4px",
           paddingRight: "20px",
           lineHeight: "1.3",
         }}>
           {nomination.title}
+        </p>
+
+        {/* nominated by */}
+        <p style={{
+          fontSize: "11px",
+          color: "#9ca3af",
+          margin: "0 0 8px",
+        }}>
+          Nominated by {isOwner ? "you" : nomination.nominatorName}
         </p>
 
         {/* description excerpt */}
