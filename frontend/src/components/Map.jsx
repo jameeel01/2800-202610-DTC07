@@ -356,7 +356,12 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   );
 }
 
-function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
+function LeafletMap({
+  isPinDropMode,
+  setIsPinDropMode,
+  nominations = [],
+  onNewNomination,
+}) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -482,6 +487,21 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
       setActivePin(null);
       setIsPinDropMode(false);
       showNotification("Nomination submitted successfully!");
+
+      // add new nomination to map instantly without page refresh
+      if (onNewNomination) {
+        onNewNomination({
+          _id: data._id,
+          location: {
+            latitude: pin.latlng.lat,
+            longitude: pin.latlng.lng,
+          },
+          title: locationName,
+          description: reason,
+          upvoteCount: 0,
+          category: "other",
+        });
+      }
     } catch (err) {
       console.error("Submit error:", err);
       showNotification("Something went wrong. Try again.");
