@@ -26,9 +26,17 @@ const {
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// middleware & cors
+// middleware & cors - allow localhost dev & deployed Vercel frontend
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5000",
+    "https://2800-202610-dtc-07-c1pl3c22d-jameeel01s-projects.vercel.app",
+  ],
+  credentials: true,
+};
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // basic routes
 app.get("/", (req, res) => {
