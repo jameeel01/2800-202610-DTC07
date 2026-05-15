@@ -50,6 +50,30 @@ const validatePasswordStrength = (password) => {
   return { valid: true };
 };
 
+// in-memory cache for nominations
+const cache = {
+  nominations: null,
+  lastUpdated: null,
+  ttl: 5 * 60 * 1000, // 5 minutes
+
+  get() {
+    if (!this.nominations || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.nominations;
+  },
+
+  set(data) {
+    this.nominations = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.nominations = null;
+    this.lastUpdated = null;
+  },
+};
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -255,6 +279,9 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
 
     await newNomination.save();
 
+    // invalidate cache
+    cache.invalidate();
+
     res.status(201).json({
       message: "Nomination submitted successfully",
       nomination: newNomination,
@@ -286,15 +313,23 @@ app.get("/api/nominations", async (req, res) => {
       }
     }
 
-    let filter = {};
-    if (neighborhood) {
-      filter["location.neighborhood"] = neighborhood;
+    // try cache first
+    let nominations = cache.get();
+    if (!nominations) {
+      nominations = await Nomination.find().sort({ createdAt: -1 });
+      cache.set(nominations);
     }
 
-    const nominations = await Nomination.find(filter).sort({ createdAt: -1 });
+    // apply neighborhood filter if provided
+    let filtered = nominations;
+    if (neighborhood) {
+      filtered = nominations.filter(
+        (n) => n.location.neighborhood === neighborhood,
+      );
+    }
 
     // add hasVoted flag to each nomination
-    const nominationsWithVoteStatus = nominations.map((nom) => {
+    const nominationsWithVoteStatus = filtered.map((nom) => {
       const nomObj = nom.toObject();
       nomObj.hasVoted = currentUserId
         ? nomObj.upvoterIds.some((id) => id.toString() === currentUserId)
@@ -374,6 +409,9 @@ app.put("/api/nominations/:id", async (req, res) => {
     if (photoUrl !== undefined) nomination.photoUrl = photoUrl;
 
     await nomination.save();
+
+    // invalidate cache
+    cache.invalidate();
 
     res.json({
       message: "Nomination updated successfully",
