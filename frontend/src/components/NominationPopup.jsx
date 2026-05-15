@@ -13,8 +13,13 @@ function formatImpactSummary(upvotes) {
 
 function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
   const [upvoteCount, setUpvoteCount] = useState(nomination.upvoteCount);
-  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [hasUpvoted, setHasUpvoted] = useState(
+    Array.isArray(nomination.upvoterIds) && user
+      ? nomination.upvoterIds.includes(user.id)
+      : false
+  );
   const [upvoting, setUpvoting] = useState(false);
 
   if (!nomination) return null;
@@ -38,8 +43,8 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setUpvoteCount(data.upvoteCount);
-        setHasUpvoted(data.hasUpvoted);
+        setUpvoteCount(data.upvoteCount ?? upvoteCount + (hasUpvoted ? -1 : 1));
+        setHasUpvoted((prev) => !prev);
         if (onUpvoteSuccess) onUpvoteSuccess(nomination._id, data.upvoteCount);
       }
     } catch (err) {
@@ -133,9 +138,9 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
             style={{
               flex: 1,
               padding: "10px",
-              background: hasUpvoted ? "white" : "#344e41",
-              color: hasUpvoted ? "#344e41" : "white",
-              border: hasUpvoted ? "1px solid #344e41" : "none",
+              background: hasUpvoted ? "#344e41" : "white",
+              color: hasUpvoted ? "white" : "#344e41",
+              border: "1px solid #344e41",
               borderRadius: "2px",
               fontSize: "13px",
               fontWeight: "600",
