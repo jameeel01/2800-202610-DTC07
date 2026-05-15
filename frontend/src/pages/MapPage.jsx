@@ -30,6 +30,11 @@ function MapPage({ isPinDropMode, setIsPinDropMode }) {
     fetchNominations();
   }, []);
 
+  // add new nomination to map instantly without page refresh
+  const handleNewNomination = (newNomination) => {
+    setNominations((prev) => [...prev, newNomination]);
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -38,6 +43,7 @@ function MapPage({ isPinDropMode, setIsPinDropMode }) {
       isPinDropMode={isPinDropMode}
       setIsPinDropMode={setIsPinDropMode}
       nominations={nominations}
+      onNewNomination={handleNewNomination}
     />
   );
 }
