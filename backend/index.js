@@ -229,10 +229,21 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
   }
 });
 
-// get all nominations (filter by neighborhood)
+// get all nominations (filter by neighborhood) - includes upvoterIds & hasVoted check
 app.get("/api/nominations", async (req, res) => {
   try {
     const { neighborhood } = req.query;
+
+    // extract user from token if provided
+    let currentUserId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(" ")[1];
+      const decoded = verifyToken(token);
+      if (decoded) {
+        currentUserId = decoded.userId;
+      }
+    }
 
     let filter = {};
     if (neighborhood) {
@@ -241,7 +252,16 @@ app.get("/api/nominations", async (req, res) => {
 
     const nominations = await Nomination.find(filter).sort({ createdAt: -1 });
 
-    res.json(nominations);
+    // add hasVoted flag to each nomination
+    const nominationsWithVoteStatus = nominations.map((nom) => {
+      const nomObj = nom.toObject();
+      nomObj.hasVoted = currentUserId
+        ? nomObj.upvoterIds.some((id) => id.toString() === currentUserId)
+        : false;
+      return nomObj;
+    });
+
+    res.json(nominationsWithVoteStatus);
   } catch (error) {
     console.error("Get nominations error:", error.message);
     res.status(500).json({ error: "Failed to retrieve nominations" });
