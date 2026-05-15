@@ -23,12 +23,71 @@ const {
   calculateCommunityStars,
 } = require("./utils/shadeCalc");
 
+// password strength validator
+const validatePasswordStrength = (password) => {
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  if (password.length < minLength) {
+    return { valid: false, error: "Password must be at least 8 characters" };
+  }
+  if (!hasUppercase) {
+    return { valid: false, error: "Password must include an uppercase letter" };
+  }
+  if (!hasLowercase) {
+    return { valid: false, error: "Password must include a lowercase letter" };
+  }
+  if (!hasNumber) {
+    return { valid: false, error: "Password must include a number" };
+  }
+  if (!hasSpecialChar) {
+    return { valid: false, error: "Password must include a special character" };
+  }
+
+  return { valid: true };
+};
+
+// in-memory cache for nominations
+const cache = {
+  nominations: null,
+  lastUpdated: null,
+  ttl: 5 * 60 * 1000, // 5 minutes
+
+  get() {
+    if (!this.nominations || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.nominations;
+  },
+
+  set(data) {
+    this.nominations = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.nominations = null;
+    this.lastUpdated = null;
+  },
+};
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// middleware & cors
+// middleware & cors - allow localhost dev & deployed Vercel frontend
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5000",
+    "https://2800-202610-dtc-07-c1pl3c22d-jameeel01s-projects.vercel.app",
+  ],
+  credentials: true,
+};
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // basic routes
 app.get("/", (req, res) => {
@@ -55,6 +114,12 @@ app.post("/api/auth/register", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Name, email, and password are required" });
+    }
+
+    // validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error });
     }
 
     // check email not taken
@@ -132,20 +197,21 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       longitude,
       streetAddress,
       neighborhood,
-      nominatorId,
       nominatorName,
-      nominatorEmail,
       title,
       description,
       photoUrl,
       category,
     } = req.body;
 
+    // extract user from token
+    const nominatorId = req.user.userId;
+    const nominatorEmail = req.user.email;
+
     // trim all strings
     streetAddress = streetAddress?.trim();
     neighborhood = neighborhood?.trim();
     nominatorName = nominatorName?.trim();
-    nominatorEmail = nominatorEmail?.trim();
     title = title?.trim();
     description = description?.trim();
 
@@ -157,9 +223,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       !latitude ||
       !longitude ||
       !streetAddress ||
-      !nominatorId ||
       !nominatorName ||
-      !nominatorEmail ||
       !title ||
       !description
     ) {
@@ -214,6 +278,9 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
 
     await newNomination.save();
 
+    // invalidate cache
+    cache.invalidate();
+
     res.status(201).json({
       message: "Nomination submitted successfully",
       nomination: newNomination,
@@ -229,19 +296,47 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
   }
 });
 
-// get all nominations (filter by neighborhood)
+// get all nominations (filter by neighborhood) - includes upvoterIds & hasVoted check
 app.get("/api/nominations", async (req, res) => {
   try {
     const { neighborhood } = req.query;
 
-    let filter = {};
-    if (neighborhood) {
-      filter["location.neighborhood"] = neighborhood;
+    // extract user from token if provided
+    let currentUserId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(" ")[1];
+      const decoded = verifyToken(token);
+      if (decoded) {
+        currentUserId = decoded.userId;
+      }
     }
 
-    const nominations = await Nomination.find(filter).sort({ createdAt: -1 });
+    // try cache first
+    let nominations = cache.get();
+    if (!nominations) {
+      nominations = await Nomination.find().sort({ createdAt: -1 });
+      cache.set(nominations);
+    }
 
-    res.json(nominations);
+    // apply neighborhood filter if provided
+    let filtered = nominations;
+    if (neighborhood) {
+      filtered = nominations.filter(
+        (n) => n.location.neighborhood === neighborhood,
+      );
+    }
+
+    // add hasVoted flag to each nomination
+    const nominationsWithVoteStatus = filtered.map((nom) => {
+      const nomObj = nom.toObject();
+      nomObj.hasVoted = currentUserId
+        ? nomObj.upvoterIds.some((id) => id.toString() === currentUserId)
+        : false;
+      return nomObj;
+    });
+
+    res.json(nominationsWithVoteStatus);
   } catch (error) {
     console.error("Get nominations error:", error.message);
     res.status(500).json({ error: "Failed to retrieve nominations" });
@@ -313,6 +408,62 @@ app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
   }
 });
 
+// edit nomination (only nominator can edit)
+app.put("/api/nominations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, photoUrl } = req.body;
+
+    // validate mongodb objectid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid nomination ID" });
+    }
+
+    // require auth
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Authorization required" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const nomination = await Nomination.findById(id);
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    // check if user is the nominator
+    if (nomination.nominatorId.toString() !== decoded.userId) {
+      return res
+        .status(403)
+        .json({ error: "Only the nominator can edit this nomination" });
+    }
+
+    // update allowed fields
+    if (title) nomination.title = title.trim();
+    if (description) nomination.description = description;
+    if (category) nomination.category = category;
+    if (photoUrl !== undefined) nomination.photoUrl = photoUrl;
+
+    await nomination.save();
+
+    // invalidate cache
+    cache.invalidate();
+
+    res.json({
+      message: "Nomination updated successfully",
+      nomination,
+    });
+  } catch (error) {
+    console.error("Edit nomination error:", error.message);
+    res.status(500).json({ error: "Failed to update nomination" });
+  }
+});
+
 app.get("/api/users", (req, res) => {
   res.json({
     users: [
@@ -372,73 +523,6 @@ app.get("/api/impact/:upvotes", (req, res) => {
   } catch (error) {
     console.error("Impact calculation error:", error.message);
     res.status(500).json({ error: "Failed to calculate impact" });
-  }
-});
-
-// Gemini backend route
-app.post("/api/ai/suggest", async (req, res) => {
-  try {
-    const { treeData, nominations } = req.body;
-
-    const prompt = `
-    You are an urban shade planning assistant for Vancouver, Canada.
-    
-    Suggest 3 specific spots in Vancouver that most need shade based on known high-traffic, low-canopy areas.
-    
-    Respond ONLY with a JSON array, no markdown, no explanation, just the array:
-    [
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
-    ]
-    `;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      },
-    );
-
-    const data = await response.json();
-    console.log("Gemini response:", JSON.stringify(data));
-
-    if (data.error) {
-      const code = data.error.code;
-      if (code === 503)
-        return res.status(503).json({ error: "AI is busy, please try again." });
-      if (code === 429)
-        return res.status(429).json({ error: "AI daily limit reached." });
-      if (code === 400)
-        return res.status(400).json({ error: "AI API key issue." });
-      return res.status(500).json({ error: "AI request failed." });
-    }
-
-    const text = data.candidates[0].content.parts[0].text;
-
-    let suggestions;
-    try {
-      suggestions = JSON.parse(text);
-    } catch {
-      return res
-        .status(500)
-        .json({ error: "AI returned an unexpected response. Try again." });
-    }
-
-    if (!Array.isArray(suggestions) || suggestions.length === 0) {
-      return res
-        .status(500)
-        .json({ error: "AI couldn't find suggestions. Try again." });
-    }
-
-    res.json({ suggestions });
-  } catch (error) {
-    console.error("AI suggest error:", error.message);
-    res.status(500).json({ error: "Failed to generate suggestions" });
   }
 });
 
