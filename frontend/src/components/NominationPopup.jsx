@@ -20,6 +20,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
   // check if this nomination belongs to the logged in user
   const user = JSON.parse(localStorage.getItem("user"));
   const isOwner = user && String(nomination.nominatorId) === String(user.id);
+  const isLoggedIn = !!localStorage.getItem("token");
 
   if (!nomination) return null;
 
@@ -28,8 +29,8 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
     : nomination.description;
 
   const handleUpvote = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    // redirect to login if not logged in
+    if (!isLoggedIn) {
       navigate("/login");
       return;
     }
@@ -38,7 +39,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
     try {
       const res = await fetch(`${API_URL}/api/nominations/${nomination._id}/upvote`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
       if (res.ok) {
@@ -175,7 +176,9 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
               opacity: upvoting ? 0.6 : 1,
             }}
           >
-            {upvoteCount} upvotes
+            {isLoggedIn
+              ? `${upvoteCount} ${hasUpvoted ? "Upvoted" : "Upvotes"}`
+              : "Log in to upvote"}
           </button>
 
           <button
