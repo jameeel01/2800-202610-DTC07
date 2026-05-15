@@ -23,12 +23,71 @@ const {
   calculateCommunityStars,
 } = require("./utils/shadeCalc");
 
+// password strength validator
+const validatePasswordStrength = (password) => {
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  if (password.length < minLength) {
+    return { valid: false, error: "Password must be at least 8 characters" };
+  }
+  if (!hasUppercase) {
+    return { valid: false, error: "Password must include an uppercase letter" };
+  }
+  if (!hasLowercase) {
+    return { valid: false, error: "Password must include a lowercase letter" };
+  }
+  if (!hasNumber) {
+    return { valid: false, error: "Password must include a number" };
+  }
+  if (!hasSpecialChar) {
+    return { valid: false, error: "Password must include a special character" };
+  }
+
+  return { valid: true };
+};
+
+// in-memory cache for nominations
+const cache = {
+  nominations: null,
+  lastUpdated: null,
+  ttl: 5 * 60 * 1000, // 5 minutes
+
+  get() {
+    if (!this.nominations || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.nominations;
+  },
+
+  set(data) {
+    this.nominations = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.nominations = null;
+    this.lastUpdated = null;
+  },
+};
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// middleware & cors
+// middleware & cors - allow localhost dev & deployed Vercel frontend
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5000",
+    "https://2800-202610-dtc-07-c1pl3c22d-jameeel01s-projects.vercel.app",
+  ],
+  credentials: true,
+};
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // basic routes
 app.get("/", (req, res) => {
@@ -55,6 +114,12 @@ app.post("/api/auth/register", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Name, email, and password are required" });
+    }
+
+    // validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error });
     }
 
     // check email not taken
@@ -132,34 +197,35 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       longitude,
       streetAddress,
       neighborhood,
-      nominatorId,
       nominatorName,
-      nominatorEmail,
       title,
       description,
       photoUrl,
       category,
     } = req.body;
 
+    // extract user from token
+    const nominatorId = req.user.userId;
+    const nominatorEmail = req.user.email;
+
     // trim all strings
     streetAddress = streetAddress?.trim();
     neighborhood = neighborhood?.trim();
     nominatorName = nominatorName?.trim();
-    nominatorEmail = nominatorEmail?.trim();
     title = title?.trim();
     description = description?.trim();
+
+    // default category to 'other' if not provided
+    category = category || "other";
 
     // check required fields
     if (
       !latitude ||
       !longitude ||
       !streetAddress ||
-      !nominatorId ||
       !nominatorName ||
-      !nominatorEmail ||
       !title ||
-      !description ||
-      !category
+      !description
     ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -212,6 +278,9 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
 
     await newNomination.save();
 
+    // invalidate cache
+    cache.invalidate();
+
     res.status(201).json({
       message: "Nomination submitted successfully",
       nomination: newNomination,
@@ -227,19 +296,47 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
   }
 });
 
-// get all nominations (filter by neighborhood)
+// get all nominations (filter by neighborhood) - includes upvoterIds & hasVoted check
 app.get("/api/nominations", async (req, res) => {
   try {
     const { neighborhood } = req.query;
 
-    let filter = {};
-    if (neighborhood) {
-      filter["location.neighborhood"] = neighborhood;
+    // extract user from token if provided
+    let currentUserId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.split(" ")[1];
+      const decoded = verifyToken(token);
+      if (decoded) {
+        currentUserId = decoded.userId;
+      }
     }
 
-    const nominations = await Nomination.find(filter).sort({ createdAt: -1 });
+    // try cache first
+    let nominations = cache.get();
+    if (!nominations) {
+      nominations = await Nomination.find().sort({ createdAt: -1 });
+      cache.set(nominations);
+    }
 
-    res.json(nominations);
+    // apply neighborhood filter if provided
+    let filtered = nominations;
+    if (neighborhood) {
+      filtered = nominations.filter(
+        (n) => n.location.neighborhood === neighborhood,
+      );
+    }
+
+    // add hasVoted flag to each nomination
+    const nominationsWithVoteStatus = filtered.map((nom) => {
+      const nomObj = nom.toObject();
+      nomObj.hasVoted = currentUserId
+        ? nomObj.upvoterIds.some((id) => id.toString() === currentUserId)
+        : false;
+      return nomObj;
+    });
+
+    res.json(nominationsWithVoteStatus);
   } catch (error) {
     console.error("Get nominations error:", error.message);
     res.status(500).json({ error: "Failed to retrieve nominations" });
@@ -266,6 +363,104 @@ app.get("/api/nominations/:id", async (req, res) => {
   } catch (error) {
     console.error("Get nomination error:", error.message);
     res.status(500).json({ error: "Failed to retrieve nomination" });
+  }
+});
+
+// upvote or un-upvote a nomination (requires login)
+app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
+  try {
+    const nomination = await Nomination.findById(req.params.id);
+
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    const userId = req.user.userId;
+
+    // default upvoterIds to empty array if it doesn't exist yet
+    if (!nomination.upvoterIds) {
+      nomination.upvoterIds = [];
+    }
+
+    const hasUpvoted = nomination.upvoterIds
+      .map(String)
+      .includes(String(userId));
+
+    if (hasUpvoted) {
+      // remove upvote
+      nomination.upvoterIds.pull(userId);
+      nomination.upvoteCount = Math.max(0, nomination.upvoteCount - 1);
+    } else {
+      // add upvote
+      nomination.upvoterIds.push(userId);
+      nomination.upvoteCount += 1;
+    }
+
+    await nomination.save();
+
+    res.json({
+      upvoteCount: nomination.upvoteCount,
+      hasUpvoted: !hasUpvoted,
+    });
+  } catch (error) {
+    console.error("Upvote error:", error.message);
+    res.status(500).json({ error: "Failed to upvote" });
+  }
+});
+
+// edit nomination (only nominator can edit)
+app.put("/api/nominations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, photoUrl } = req.body;
+
+    // validate mongodb objectid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid nomination ID" });
+    }
+
+    // require auth
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Authorization required" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const nomination = await Nomination.findById(id);
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    // check if user is the nominator
+    if (nomination.nominatorId.toString() !== decoded.userId) {
+      return res
+        .status(403)
+        .json({ error: "Only the nominator can edit this nomination" });
+    }
+
+    // update allowed fields
+    if (title) nomination.title = title.trim();
+    if (description) nomination.description = description;
+    if (category) nomination.category = category;
+    if (photoUrl !== undefined) nomination.photoUrl = photoUrl;
+
+    await nomination.save();
+
+    // invalidate cache
+    cache.invalidate();
+
+    res.json({
+      message: "Nomination updated successfully",
+      nomination,
+    });
+  } catch (error) {
+    console.error("Edit nomination error:", error.message);
+    res.status(500).json({ error: "Failed to update nomination" });
   }
 });
 

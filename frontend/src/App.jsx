@@ -1,12 +1,12 @@
 import "./App.css";
 import LandingPage from "./pages/landingPage";
-import LeafletMap from "./components/Map.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import AuthPage from "./pages/AuthPage";
 import ImpactEstimatePage from "./pages/ImpactEstimatePage";
+import Home from "./pages/Home";
 import { useState } from "react";
+import MapPage from "./pages/MapPage";
 
 function App() {
   const [isPinDropMode, setIsPinDropMode] = useState(false);
@@ -17,6 +17,7 @@ function App() {
           // Pages that do not need the navbar
         }
         <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<Home />} />
 
         {
           // Pages that do need the navbar
@@ -32,15 +33,18 @@ function App() {
           <Route
             path="/map"
             element={
-              <LeafletMap
+              <MapPage
                 isPinDropMode={isPinDropMode}
                 setIsPinDropMode={setIsPinDropMode}
               />
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/nomination/:id/impact" element={<ImpactEstimatePage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
+          <Route
+            path="/nomination/:id/impact"
+            element={<ImpactEstimatePage />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

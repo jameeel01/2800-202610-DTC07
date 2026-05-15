@@ -1,23 +1,40 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Map, LogIn, UserPlus, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Map, LogIn, X, LogOut } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const links = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/map", label: "Map", icon: Map },
-    { to: "/login", label: "Login", icon: LogIn },
-    { to: "/signup", label: "Sign Up", icon: UserPlus },
-  ];
+  // load user from localStorage
+  const userData = localStorage.getItem("user");
+  const user = userData ? JSON.parse(userData) : null;
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/");
+    closeMenu();
+  };
+
+  // show different nav if logged in
+  const links = user
+    ? [
+      { to: "/home", label: "Home", icon: Home },
+      { to: "/map", label: "Map", icon: Map },
+    ]
+    : [
+      { to: "/", label: "Home", icon: Home },
+      { to: "/map", label: "Map", icon: Map },
+      { to: "/login", label: "Log In", icon: LogIn },
+    ];
 
   const closeMenu = () => setIsOpen(false);
 
   return (
     <>
-      {/* Kevins navbar*/}
+      {/* Kevin's navbar */}
       <nav className="hidden sm:flex fixed bottom-0 left-0 right-0 bg-[#3a5a40] border-t border-[#344e41] justify-around items-center py-3 pb-6 z-50">
         {links.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to;
@@ -33,14 +50,27 @@ function Navbar() {
             </Link>
           );
         })}
+
+        {/* logout button for desktop */}
+        {user && (
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center gap-1 text-xs text-gray-400 hover:text-[#a3b18a]"
+          >
+            <LogOut size={22} />
+            Logout
+          </button>
+        )}
       </nav>
 
       {/* Ced mobile navbar/hamburger menu */}
       <nav className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-[#3a5a40] border-b border-[#344e41] flex items-center justify-between px-5 z-[1000]">
-        <span className="text-[#a3b18a] font-bold text-lg tracking-wide">Shaded</span>
+        <span className="text-[#a3b18a] font-bold text-lg tracking-wide">
+          Shaded
+        </span>
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className="w-10 h-10 flex flex-col justify-center items-center gap-1.25 rounded-xl hover:bg-gray-800 transition-colors"
+          className="w-10 h-10 flex flex-col justify-center items-center gap-1.25 hover:bg-gray-800 transition-colors"
           aria-label="Toggle menu"
         >
           {isOpen ? (
@@ -58,7 +88,9 @@ function Navbar() {
       {/* Backdrop (mobile only) */}
       <div
         onClick={closeMenu}
-        className={`sm:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`sm:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
           }`}
       />
 
@@ -84,6 +116,17 @@ function Navbar() {
             </Link>
           );
         })}
+
+        {/* logout button for mobile drawer */}
+        {user && (
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700 w-full"
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        )}
       </div>
 
       <div className="sm:hidden h-14" />
