@@ -27,8 +27,8 @@ function Login() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
-    } catch (err) {
+      navigate("/home");
+    } catch {
       setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);

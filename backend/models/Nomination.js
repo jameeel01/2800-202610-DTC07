@@ -68,6 +68,14 @@ const nominationSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // users who have upvoted (for toggle logic)
+    upvoterIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     // flagging system
     isFlagged: {
       type: Boolean,
