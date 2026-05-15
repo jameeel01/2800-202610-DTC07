@@ -23,6 +23,33 @@ const {
   calculateCommunityStars,
 } = require("./utils/shadeCalc");
 
+// password strength validator
+const validatePasswordStrength = (password) => {
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  if (password.length < minLength) {
+    return { valid: false, error: "Password must be at least 8 characters" };
+  }
+  if (!hasUppercase) {
+    return { valid: false, error: "Password must include an uppercase letter" };
+  }
+  if (!hasLowercase) {
+    return { valid: false, error: "Password must include a lowercase letter" };
+  }
+  if (!hasNumber) {
+    return { valid: false, error: "Password must include a number" };
+  }
+  if (!hasSpecialChar) {
+    return { valid: false, error: "Password must include a special character" };
+  }
+
+  return { valid: true };
+};
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -63,6 +90,12 @@ app.post("/api/auth/register", async (req, res) => {
       return res
         .status(400)
         .json({ error: "Name, email, and password are required" });
+    }
+
+    // validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error });
     }
 
     // check email not taken
