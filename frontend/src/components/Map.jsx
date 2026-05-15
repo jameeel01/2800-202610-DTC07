@@ -390,7 +390,9 @@ function LeafletMap({
 
   // filter nominations based on toggle
   const visibleNominations = showOnlyMine
-    ? nominations.filter((n) => user && String(n.nominatorId) === String(user.id))
+    ? nominations.filter(
+        (n) => user && String(n.nominatorId) === String(user.id),
+      )
     : nominations;
 
   //AI suggestions
@@ -714,7 +716,11 @@ function LeafletMap({
           const isSelected = selectedNominationId === n._id;
           // use blue marker for user's own nominations, highlighted for selected, black for others
           const isOwn = user && String(n.nominatorId) === String(user.id);
-          const icon = isSelected ? bluemarker : isOwn ? ownmarker : blackmarker;
+          const icon = isSelected
+            ? bluemarker
+            : isOwn
+              ? ownmarker
+              : blackmarker;
           return (
             <Marker
               key={n._id}
