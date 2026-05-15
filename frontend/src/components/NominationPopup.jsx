@@ -21,6 +21,8 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
       : false
   );
   const [upvoting, setUpvoting] = useState(false);
+  const isOwner = user && String(nomination.nominatorId) === String(user.id);
+  const isLoggedIn = !!localStorage.getItem("token");
 
   if (!nomination) return null;
 
@@ -29,8 +31,8 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
     : nomination.description;
 
   const handleUpvote = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    // redirect to login if not logged in
+    if (!isLoggedIn) {
       navigate("/login");
       return;
     }
@@ -39,7 +41,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
     try {
       const res = await fetch(`${API_URL}/api/nominations/${nomination._id}/upvote`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
       if (res.ok) {
@@ -76,6 +78,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
           padding: "16px",
           width: "280px",
           fontFamily: "sans-serif",
+          borderRadius: "12px",
         }}
       >
         {/* close button */}
@@ -96,16 +99,43 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
           x
         </button>
 
+        {/* your nomination badge */}
+        {isOwner && (
+          <span
+            style={{
+              display: "inline-block",
+              background: "#344e41",
+              color: "white",
+              fontSize: "10px",
+              fontWeight: "700",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              marginBottom: "6px",
+            }}
+          >
+            Your Nomination
+          </span>
+        )}
+
         {/* title */}
         <p style={{
           fontSize: "15px",
           fontWeight: "700",
           color: "#1a3a0f",
-          margin: "0 0 6px",
+          margin: "0 0 4px",
           paddingRight: "20px",
           lineHeight: "1.3",
         }}>
           {nomination.title}
+        </p>
+
+        {/* nominated by */}
+        <p style={{
+          fontSize: "11px",
+          color: "#9ca3af",
+          margin: "0 0 8px",
+        }}>
+          Nominated by {isOwner ? "you" : nomination.nominatorName}
         </p>
 
         {/* description excerpt */}
@@ -148,7 +178,9 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
               opacity: upvoting ? 0.6 : 1,
             }}
           >
-            {upvoteCount} upvotes
+            {isLoggedIn
+              ? `${upvoteCount} ${hasUpvoted ? "Upvoted" : "Upvotes"}`
+              : "Log in to upvote"}
           </button>
 
           <button

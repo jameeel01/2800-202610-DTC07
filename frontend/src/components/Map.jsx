@@ -15,6 +15,8 @@ import LoadingSpinner from "./LoadingSpinner";
 import BottomSheet from "./BottomSheet";
 import NominationsPanel from "./NominationsPanel";
 import NominationPopup from "./NominationPopup";
+import BlueMarkerSvg from "../assets/BlueMarker.svg";
+import AISuggester from "./AISuggester";
 
 const blackmarker = L.icon({
   iconUrl: "/ShadedPin.png",
@@ -22,12 +24,19 @@ const blackmarker = L.icon({
   iconAnchor: [16, 42],
   popupAnchor: [0, -38],
 });
-import AISuggester from "./AISuggester";
 
 const bluemarker = L.icon({
   iconUrl: "/ShadedPinHighlighted.png",
   iconSize: [32, 42],
   iconAnchor: [16, 42],
+  popupAnchor: [0, -38],
+});
+
+// used for the logged in user's own nominations
+const ownmarker = L.icon({
+  iconUrl: BlueMarkerSvg,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
   popupAnchor: [0, -38],
 });
 
@@ -356,12 +365,19 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   );
 }
 
-function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
+function LeafletMap({
+  isPinDropMode,
+  setIsPinDropMode,
+  nominations = [],
+  onNewNomination,
+}) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [notificationIsLogin, setNotificationIsLogin] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [selectedNominationId, setSelectedNominationId] = useState(null);
   const [selectedNomination, setSelectedNomination] = useState(null);
   const [localNominations, setLocalNominations] = useState([]);
@@ -369,6 +385,16 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [aiLoading, setAiLoading] = useState(false);
   const tourRestartRef = useRef(null);
   const navigate = useNavigate();
+
+  // get logged in user for marker differentiation and feature gating
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // filter nominations based on toggle
+  const visibleNominations = showOnlyMine
+    ? nominations.filter(
+        (n) => user && String(n.nominatorId) === String(user.id),
+      )
+    : nominations;
 
   //AI suggestions
   const handleAISuggest = async () => {
@@ -413,14 +439,19 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
       setAiLoading(false);
     }
   };
+
   // Removes AI suggestion
   const handleRemoveSuggestion = (index) => {
     setSuggestions((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const showNotification = (message) => {
+  const showNotification = (message, isLogin = false) => {
     setNotification(message);
-    setTimeout(() => setNotification(null), 3000);
+    setNotificationIsLogin(isLogin);
+    setTimeout(() => {
+      setNotification(null);
+      setNotificationIsLogin(false);
+    }, 3000);
   };
 
   const handlePinPlaced = (latlng) => {
@@ -441,7 +472,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
       const token = localStorage.getItem("token");
 
       if (!user || !token) {
-        showNotification("You must be logged in to nominate.");
+        showNotification("Sign in to nominate a location", true);
         return;
       }
 
@@ -482,6 +513,21 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
       setActivePin(null);
       setIsPinDropMode(false);
       showNotification("Nomination submitted successfully!");
+
+      // add new nomination to map instantly without page refresh
+      if (onNewNomination) {
+        onNewNomination({
+          _id: data._id,
+          location: {
+            latitude: pin.latlng.lat,
+            longitude: pin.latlng.lng,
+          },
+          title: locationName,
+          description: reason,
+          upvoteCount: 0,
+          category: "other",
+        });
+      }
     } catch (err) {
       console.error("Submit error:", err);
       showNotification("Something went wrong. Try again.");
@@ -534,6 +580,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         />
       )}
 
+      {/* notification banner */}
       {notification && (
         <div
           style={{
@@ -555,9 +602,26 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
             whiteSpace: "nowrap",
           }}
         >
-          ✓ {notification}
+          {notificationIsLogin ? (
+            <>
+              🔒 {notification} —{" "}
+              <span
+                onClick={() => navigate("/login")}
+                style={{
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  color: "#a3e635",
+                }}
+              >
+                Log in
+              </span>
+            </>
+          ) : (
+            <>✓ {notification}</>
+          )}
         </div>
       )}
+
       {/* AI loading banner */}
       {aiLoading && (
         <div
@@ -593,6 +657,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           Finding the best spots for shade...
         </div>
       )}
+
       {/* Pin drop banner */}
       {isPinDropMode && !activePin && (
         <div
@@ -646,16 +711,23 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {/* existing nominations from backend + locally submitted ones */}
-        {[...nominations, ...localNominations].map((n) => {
+        {[...visibleNominations, ...localNominations].map((n) => {
           const lat = n.location?.latitude;
           const lng = n.location?.longitude;
           if (!lat || !lng) return null;
           const isSelected = selectedNominationId === n._id;
+          // use blue marker for user's own nominations, highlighted for selected, black for others
+          const isOwn = user && String(n.nominatorId) === String(user.id);
+          const icon = isSelected
+            ? bluemarker
+            : isOwn
+              ? ownmarker
+              : blackmarker;
           return (
             <Marker
               key={n._id}
               position={[lat, lng]}
-              icon={isSelected ? bluemarker : blackmarker}
+              icon={icon}
               eventHandlers={{
                 click: () => {
                   setSelectedNominationId(n._id);
@@ -665,6 +737,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
             />
           );
         })}
+
         {/* pins placed in current session */}
         {pins.map((pin) => (
           <Marker
@@ -676,6 +749,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
             }}
           />
         ))}
+
         <NominationsPanel
           isOpen={showNominations}
           onClose={() => setShowNominations(false)}
@@ -688,10 +762,11 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         <AISuggester
           suggestions={suggestions}
           onRemove={handleRemoveSuggestion}
-        />{" "}
+        />
       </MapContainer>
-      {/*AI button*/}
-      {!activePin && (
+
+      {/* AI button — only show if logged in */}
+      {!activePin && user && (
         <button
           onClick={handleAISuggest}
           style={{
@@ -731,6 +806,29 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         </button>
       )}
 
+      {/* toggle between all nominations and user's own — only show if logged in */}
+      {!activePin && user && (
+        <button
+          onClick={() => setShowOnlyMine((prev) => !prev)}
+          style={{
+            position: "absolute",
+            bottom: "64px",
+            left: "16px",
+            zIndex: 1000,
+            padding: "10px 18px",
+            background: "#2d6a0f",
+            color: "white",
+            border: "none",
+            borderRadius: "2px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+          }}
+        >
+          {showOnlyMine ? "Show All" : "Show Mine"}
+        </button>
+      )}
+
       {/* desktop nomination */}
       {activePin && (
         <div className="hidden md:flex">
@@ -751,7 +849,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
         onRemove={handleRemove}
         pin={activePin}
       />
-      {/*AI Suggested Spot Count Card */}
+
+      {/* AI Suggested Spot Count Card */}
       {suggestions.length > 0 && !activePin && (
         <div
           style={{
@@ -793,12 +892,14 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           ✕ Clear AI Suggestions
         </button>
       )}
+
+      {/* nominate button — always visible, prompts login if not signed in */}
       {!activePin && (
         <button
           onClick={() => {
             const token = localStorage.getItem("token");
             if (!token) {
-              navigate("/login");
+              showNotification("Sign in to nominate a location", true);
             } else {
               setIsPinDropMode(true);
             }
