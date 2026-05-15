@@ -16,7 +16,7 @@ const steps = [
     id: "map",
     title: "Nominations on the map",
     description:
-      "Each pin marks a community nomination. Tap a pin to see the location, its upvote count, and how much shade a tree there would provide.",
+      "Each pin marks a community nomination. Tap a pin to see its details, upvote count, and estimated shade impact. Swipe up the panel at the bottom to browse all nominations near you.",
     position: "top-center",
     arrow: "down",
     overlay: "light",
@@ -25,7 +25,7 @@ const steps = [
     id: "nominate",
     title: "Nominate a spot",
     description:
-      "Tap Nominate, then tap anywhere on the map to drop a pin. You can describe why the spot needs shade before submitting.",
+      "Tap Nominate, then tap anywhere on the map to drop a pin. Describe why the spot needs shade and submit. Your nomination will appear on the map right away.",
     position: "above-nominate",
     arrow: "down",
     overlay: "light",
@@ -34,7 +34,7 @@ const steps = [
     id: "impact",
     title: "See the shade impact",
     description:
-      "Every nomination shows an estimated shade coverage area, surface temperature reduction, and annual CO2 absorbed. Figures are sourced from City of Vancouver tree data.",
+      "Tap View Details on any nomination popup to see the full estimated impact: temperature reduction, shade coverage, CO2 absorbed, and community rating. All figures are sourced from City of Vancouver tree data.",
     position: "center",
     arrow: null,
     overlay: "dark",
