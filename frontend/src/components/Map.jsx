@@ -364,6 +364,7 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   const [showNominations, setShowNominations] = useState(false);
   const [selectedNominationId, setSelectedNominationId] = useState(null);
   const [selectedNomination, setSelectedNomination] = useState(null);
+  const [localNominations, setLocalNominations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   const tourRestartRef = useRef(null);
@@ -474,11 +475,10 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
       }
 
       // update local pin state on success
-      setPins((prev) =>
-        prev.map((p) =>
-          p.id === pin.id ? { ...p, locationName, reason, submitted: true } : p,
-        ),
-      );
+      setPins((prev) => prev.filter((p) => p.id !== pin.id));
+      if (data.nomination) {
+        setLocalNominations((prev) => [...prev, data.nomination]);
+      }
       setActivePin(null);
       setIsPinDropMode(false);
       showNotification("Nomination submitted successfully!");
@@ -493,6 +493,9 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
   };
 
   const handleExitNomination = () => {
+    if (activePin) {
+      setPins((prev) => prev.filter((p) => p.id !== activePin.id));
+    }
     setActivePin(null);
     setIsPinDropMode(false);
   };
@@ -642,8 +645,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [] }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {/* existing nominations from backend */}
-        {nominations.map((n) => {
+        {/* existing nominations from backend + locally submitted ones */}
+        {[...nominations, ...localNominations].map((n) => {
           const lat = n.location?.latitude;
           const lng = n.location?.longitude;
           if (!lat || !lng) return null;
