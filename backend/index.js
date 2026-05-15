@@ -197,20 +197,21 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       longitude,
       streetAddress,
       neighborhood,
-      nominatorId,
       nominatorName,
-      nominatorEmail,
       title,
       description,
       photoUrl,
       category,
     } = req.body;
 
+    // extract user from token
+    const nominatorId = req.user.userId;
+    const nominatorEmail = req.user.email;
+
     // trim all strings
     streetAddress = streetAddress?.trim();
     neighborhood = neighborhood?.trim();
     nominatorName = nominatorName?.trim();
-    nominatorEmail = nominatorEmail?.trim();
     title = title?.trim();
     description = description?.trim();
 
@@ -222,9 +223,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       !latitude ||
       !longitude ||
       !streetAddress ||
-      !nominatorId ||
       !nominatorName ||
-      !nominatorEmail ||
       !title ||
       !description
     ) {
@@ -482,6 +481,54 @@ app.get("/api/impact/:upvotes", (req, res) => {
   } catch (error) {
     console.error("Impact calculation error:", error.message);
     res.status(500).json({ error: "Failed to calculate impact" });
+  }
+});
+
+// upvote/unvote nomination
+app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    // validate mongodb objectid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid nomination ID" });
+    }
+
+    const nomination = await Nomination.findById(id);
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    // check if user already voted
+    const hasVoted = nomination.upvoterIds.some(
+      (voterId) => voterId.toString() === userId,
+    );
+
+    if (hasVoted) {
+      // remove vote
+      nomination.upvoterIds = nomination.upvoterIds.filter(
+        (voterId) => voterId.toString() !== userId,
+      );
+      nomination.upvoteCount = Math.max(0, nomination.upvoteCount - 1);
+    } else {
+      // add vote
+      nomination.upvoterIds.push(userId);
+      nomination.upvoteCount += 1;
+    }
+
+    await nomination.save();
+
+    // invalidate cache
+    cache.invalidate();
+
+    res.json({
+      message: hasVoted ? "Vote removed" : "Vote added",
+      nomination,
+    });
+  } catch (error) {
+    console.error("Upvote error:", error.message);
+    res.status(500).json({ error: "Failed to process vote" });
   }
 });
 
