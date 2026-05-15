@@ -332,6 +332,59 @@ app.get("/api/nominations/:id", async (req, res) => {
   }
 });
 
+// edit nomination (only nominator can edit)
+app.put("/api/nominations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, photoUrl } = req.body;
+
+    // validate mongodb objectid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid nomination ID" });
+    }
+
+    // require auth
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Authorization required" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const nomination = await Nomination.findById(id);
+    if (!nomination) {
+      return res.status(404).json({ error: "Nomination not found" });
+    }
+
+    // check if user is the nominator
+    if (nomination.nominatorId.toString() !== decoded.userId) {
+      return res
+        .status(403)
+        .json({ error: "Only the nominator can edit this nomination" });
+    }
+
+    // update allowed fields
+    if (title) nomination.title = title.trim();
+    if (description) nomination.description = description;
+    if (category) nomination.category = category;
+    if (photoUrl !== undefined) nomination.photoUrl = photoUrl;
+
+    await nomination.save();
+
+    res.json({
+      message: "Nomination updated successfully",
+      nomination,
+    });
+  } catch (error) {
+    console.error("Edit nomination error:", error.message);
+    res.status(500).json({ error: "Failed to update nomination" });
+  }
+});
+
 app.get("/api/users", (req, res) => {
   res.json({
     users: [
