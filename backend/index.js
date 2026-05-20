@@ -74,6 +74,30 @@ const cache = {
   },
 };
 
+// in-memory cache for shade data
+const shadeCache = {
+  data: null,
+  lastUpdated: null,
+  ttl: 24 * 60 * 60 * 1000, // 24 hours
+
+  get() {
+    if (!this.data || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.data;
+  },
+
+  set(data) {
+    this.data = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.data = null;
+    this.lastUpdated = null;
+  },
+};
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -434,6 +458,12 @@ app.get("/api/users", (req, res) => {
 // shade data from vancouver public-trees api
 app.get("/api/shade-data", async (req, res) => {
   try {
+    // try cache first
+    let shadeData = shadeCache.get();
+    if (shadeData) {
+      return res.json(shadeData);
+    }
+
     const url =
       "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-trees/records?limit=100";
     const response = await fetch(url);
@@ -445,7 +475,8 @@ app.get("/api/shade-data", async (req, res) => {
         .json({ error: "Failed to fetch tree data from Vancouver API" });
     }
 
-    const shadeData = formatShadeResponse(data.results);
+    shadeData = formatShadeResponse(data.results);
+    shadeCache.set(shadeData);
     res.json(shadeData);
   } catch (error) {
     console.error("Shade data fetch error:", error.message);
