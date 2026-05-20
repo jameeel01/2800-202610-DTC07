@@ -2,7 +2,20 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const cors = require("cors");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 require("dotenv").config();
+
+// configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
