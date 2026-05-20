@@ -468,6 +468,12 @@ function LeafletMap({
     }
   };
 
+  //Adds AI suggestion
+  const handleNominateSuggestion = ({ lat, lng }) => {
+    setIsPinDropMode(false);
+    handlePinPlaced({ lat, lng });
+  };
+
   // Removes AI suggestion
   const handleRemoveSuggestion = (index) => {
     setSuggestions((prev) => prev.filter((_, i) => i !== index));
@@ -791,6 +797,7 @@ function LeafletMap({
         <AISuggester
           suggestions={suggestions}
           onRemove={handleRemoveSuggestion}
+          onNominate={handleNominateSuggestion}
         />
       </MapContainer>
 
