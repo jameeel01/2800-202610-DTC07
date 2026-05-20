@@ -2,7 +2,20 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const cors = require("cors");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 require("dotenv").config();
+
+// configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
@@ -70,6 +83,30 @@ const cache = {
 
   invalidate() {
     this.nominations = null;
+    this.lastUpdated = null;
+  },
+};
+
+// in-memory cache for shade data
+const shadeCache = {
+  data: null,
+  lastUpdated: null,
+  ttl: 24 * 60 * 60 * 1000, // 24 hours
+
+  get() {
+    if (!this.data || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.data;
+  },
+
+  set(data) {
+    this.data = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.data = null;
     this.lastUpdated = null;
   },
 };
@@ -202,6 +239,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl,
       category,
+      uploadedFiles,
     } = req.body;
 
     // extract user from token
@@ -274,6 +312,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl: photoUrl || null,
       category,
+      uploadedFiles: uploadedFiles || [],
     });
 
     await newNomination.save();
@@ -476,6 +515,12 @@ app.get("/api/users", (req, res) => {
 // shade data from vancouver public-trees api
 app.get("/api/shade-data", async (req, res) => {
   try {
+    // try cache first
+    let shadeData = shadeCache.get();
+    if (shadeData) {
+      return res.json(shadeData);
+    }
+
     const url =
       "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-trees/records?limit=100";
     const response = await fetch(url);
@@ -487,7 +532,8 @@ app.get("/api/shade-data", async (req, res) => {
         .json({ error: "Failed to fetch tree data from Vancouver API" });
     }
 
-    const shadeData = formatShadeResponse(data.results);
+    shadeData = formatShadeResponse(data.results);
+    shadeCache.set(shadeData);
     res.json(shadeData);
   } catch (error) {
     console.error("Shade data fetch error:", error.message);
@@ -658,6 +704,65 @@ app.post("/api/ai/suggest", async (req, res) => {
     res.status(500).json({ error: "Failed to generate suggestions" });
   }
 });
+
+// upload file to cloudinary
+app.post(
+  "/api/upload",
+  verifyToken,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      // validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ error: "File size must be under 5MB" });
+      }
+
+      // validate file type (images and PDF only)
+      const allowedMimes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+      ];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        return res.status(400).json({
+          error: "Only JPG, PNG, GIF, WebP, and PDF files are allowed",
+        });
+      }
+
+      // upload to cloudinary from memory buffer
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "dtc07-nominations",
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error.message);
+            return res.status(500).json({ error: "Failed to upload file" });
+          }
+
+          res.json({
+            message: "File uploaded successfully",
+            url: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+
+      uploadStream.end(req.file.buffer);
+    } catch (error) {
+      console.error("Upload error:", error.message);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
+  },
+);
 
 // 404 catch-all
 app.use((req, res) => {
