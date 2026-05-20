@@ -226,6 +226,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl,
       category,
+      uploadedFiles,
     } = req.body;
 
     // extract user from token
@@ -298,6 +299,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl: photoUrl || null,
       category,
+      uploadedFiles: uploadedFiles || [],
     });
 
     await newNomination.save();
