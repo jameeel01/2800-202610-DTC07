@@ -549,26 +549,61 @@ function checkAIRateLimit(userId) {
 // Gemini backend route
 app.post("/api/ai/suggest", async (req, res) => {
   try {
-    const identifier = req.user?.userId || req.ip;
+    // rate limit check
+    const identifier = req.ip;
     const rateCheck = checkAIRateLimit(identifier);
-
     if (rateCheck.limited) {
       return res.status(429).json({
         error: `Please wait ${rateCheck.waitMinutes} minute(s) before requesting again.`,
       });
     }
 
+    // fetch real tree data from Vancouver Open Data
+    const treeRes = await fetch(
+      "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-trees/records?limit=100",
+    );
+    const treeData = await treeRes.json();
+    const trees =
+      treeData.results
+        ?.map((t) => ({
+          lat: t.geo_point_2d?.lat,
+          lng: t.geo_point_2d?.lon,
+          name: t.common_name,
+        }))
+        .filter((t) => t.lat && t.lng) || [];
+
+    // fetch existing nominations
+    const nominations = await Nomination.find()
+      .select("location title")
+      .limit(50);
+    const nominationList = nominations.map((n) => ({
+      lat: n.location.latitude,
+      lng: n.location.longitude,
+      title: n.title,
+    }));
+
     const prompt = `
     You are an urban shade planning assistant for Vancouver, Canada.
-    
-    Suggest 3 specific spots in Vancouver that most need shade based on known high-traffic, low-canopy areas.
-    
-    Respond ONLY with a JSON array, no markdown, no explanation, just the array:
+
+    Here are the current street tree locations (lat/lng):
+    ${JSON.stringify(trees.slice(0, 20))}
+
+    Here are already nominated spots to avoid suggesting:
+    ${JSON.stringify(nominationList)}
+
+    Based on areas with low tree density and no existing nominations, suggest 3 specific spots in Vancouver that most need shade.
+
+    Return ONLY valid JSON with exactly 3 suggested locations. No markdown, no explanation, no extra text before or after the array.
+
     [
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
-      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
+      {
+        "lat": 49.123,
+        "lng": -123.456,
+        "reason": "One sentence explaining why this spot needs shade."
+      }
     ]
+
+    Return exactly 3 items. Nothing else.
     `;
 
     const response = await fetch(
@@ -599,7 +634,6 @@ app.post("/api/ai/suggest", async (req, res) => {
     const parts = data.candidates[0].content.parts;
     const jsonPart = parts.find((p) => !p.thought) || parts[parts.length - 1];
     const text = jsonPart.text;
-    console.log("Raw Gemma text:", text);
 
     const cleaned = text.replace(/```json|```/g, "").trim();
 
