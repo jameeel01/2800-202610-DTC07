@@ -526,9 +526,38 @@ app.get("/api/impact/:upvotes", (req, res) => {
   }
 });
 
+// in-memory rate limiter for AI endpoint
+const aiRateLimit = new Map();
+const AI_RATE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+
+function checkAIRateLimit(userId) {
+  const now = Date.now();
+  const lastRequest = aiRateLimit.get(userId);
+
+  if (lastRequest && now - lastRequest < AI_RATE_LIMIT_MS) {
+    const waitSeconds = Math.ceil(
+      (AI_RATE_LIMIT_MS - (now - lastRequest)) / 1000,
+    );
+    const waitMinutes = Math.ceil(waitSeconds / 60);
+    return { limited: true, waitMinutes };
+  }
+
+  aiRateLimit.set(userId, now);
+  return { limited: false };
+}
+
 // Gemini backend route
 app.post("/api/ai/suggest", async (req, res) => {
   try {
+    const identifier = req.user?.userId || req.ip;
+    const rateCheck = checkAIRateLimit(identifier);
+
+    if (rateCheck.limited) {
+      return res.status(429).json({
+        error: `Please wait ${rateCheck.waitMinutes} minute(s) before requesting again.`,
+      });
+    }
+
     const prompt = `
     You are an urban shade planning assistant for Vancouver, Canada.
     
