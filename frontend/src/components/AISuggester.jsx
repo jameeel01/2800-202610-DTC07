@@ -37,13 +37,17 @@ const aiMarker = (index) =>
     className: "",
   });
 
-function AISuggester({ suggestions, onRemove }) {
+function AISuggester({ suggestions, onRemove, onNominate }) {
   return (
     <>
       {suggestions.map((s, i) => {
         if (!s.lat || !s.lng) return null;
         return (
-          <Marker key={i} position={[s.lat, s.lng]} icon={aiMarker(i)}>
+          <Marker
+            key={`${s.lat}-${s.lng}`}
+            position={[s.lat, s.lng]}
+            icon={aiMarker(i)}
+          >
             <Popup>
               <div style={{ maxWidth: "200px" }}>
                 <p
@@ -66,6 +70,26 @@ function AISuggester({ suggestions, onRemove }) {
                   Based on Vancouver tree density data. This is an AI estimate,
                   not official city data.
                 </p>
+                <button
+                  onClick={() => {
+                    onNominate({ lat: s.lat, lng: s.lng });
+                    onRemove(i);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    background: "#2d6a0f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    marginBottom: "6px",
+                  }}
+                >
+                  + Nominate this spot
+                </button>
                 <button
                   onClick={() => onRemove(i)}
                   style={{
