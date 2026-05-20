@@ -578,6 +578,45 @@ app.post("/api/nominations/:id/upvote", verifyToken, async (req, res) => {
   }
 });
 
+// upload file to cloudinary
+app.post(
+  "/api/upload",
+  verifyToken,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      // upload to cloudinary from memory buffer
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "dtc07-nominations",
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error.message);
+            return res.status(500).json({ error: "Failed to upload file" });
+          }
+
+          res.json({
+            message: "File uploaded successfully",
+            url: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+
+      uploadStream.end(req.file.buffer);
+    } catch (error) {
+      console.error("Upload error:", error.message);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
+  },
+);
+
 // 404 catch-all
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
