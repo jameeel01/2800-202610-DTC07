@@ -526,6 +526,76 @@ app.get("/api/impact/:upvotes", (req, res) => {
   }
 });
 
+// Gemini backend route
+app.post("/api/ai/suggest", async (req, res) => {
+  try {
+    const prompt = `
+    You are an urban shade planning assistant for Vancouver, Canada.
+    
+    Suggest 3 specific spots in Vancouver that most need shade based on known high-traffic, low-canopy areas.
+    
+    Respond ONLY with a JSON array, no markdown, no explanation, just the array:
+    [
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" },
+      { "lat": 49.123, "lng": -123.456, "reason": "one sentence reason" }
+    ]
+    `;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      },
+    );
+
+    const data = await response.json();
+    console.log("Gemini response:", JSON.stringify(data));
+
+    if (data.error) {
+      const code = data.error.code;
+      if (code === 503)
+        return res.status(503).json({ error: "AI is busy, please try again." });
+      if (code === 429)
+        return res.status(429).json({ error: "AI daily limit reached." });
+      if (code === 400)
+        return res.status(400).json({ error: "AI API key issue." });
+      return res.status(500).json({ error: "AI request failed." });
+    }
+
+    const parts = data.candidates[0].content.parts;
+    const jsonPart = parts.find((p) => !p.thought) || parts[parts.length - 1];
+    const text = jsonPart.text;
+    console.log("Raw Gemma text:", text);
+
+    const cleaned = text.replace(/```json|```/g, "").trim();
+
+    let suggestions;
+    try {
+      suggestions = JSON.parse(cleaned);
+    } catch {
+      return res
+        .status(500)
+        .json({ error: "AI returned an unexpected response. Try again." });
+    }
+
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+      return res
+        .status(500)
+        .json({ error: "AI couldn't find suggestions. Try again." });
+    }
+
+    res.json({ suggestions });
+  } catch (error) {
+    console.error("AI suggest error:", error.message);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
+});
+
 // 404 catch-all
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
