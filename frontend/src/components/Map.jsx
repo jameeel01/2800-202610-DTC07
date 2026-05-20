@@ -457,7 +457,9 @@ function LeafletMap({
       );
       const data = await res.json();
       if (data.suggestions && Array.isArray(data.suggestions)) {
-        setSuggestions(data.suggestions);
+        setSuggestions(
+          data.suggestions.map((s, i) => ({ ...s, originalIndex: i })),
+        );
       } else {
         showNotification(data.error || "Failed to get suggestions.");
       }

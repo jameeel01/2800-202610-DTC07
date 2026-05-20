@@ -46,7 +46,7 @@ function AISuggester({ suggestions, onRemove, onNominate }) {
           <Marker
             key={`${s.lat}-${s.lng}`}
             position={[s.lat, s.lng]}
-            icon={aiMarker(i)}
+            icon={aiMarker(s.originalIndex)}
           >
             <Popup>
               <div style={{ maxWidth: "200px" }}>
@@ -57,7 +57,7 @@ function AISuggester({ suggestions, onRemove, onNominate }) {
                     margin: "0 0 4px",
                   }}
                 >
-                  AI Shade Recommendation #{i + 1}
+                  AI Shade Recommendation #{s.originalIndex + 1}
                 </p>
                 <p
                   style={{ fontSize: "13px", color: "#333", margin: "0 0 8px" }}
