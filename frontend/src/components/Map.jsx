@@ -18,7 +18,6 @@ import NominationPopup from "./NominationPopup";
 import BlueMarkerSvg from "../assets/BlueMarker.svg";
 import AISuggester from "./AISuggester";
 
-
 const blackmarker = L.icon({
   iconUrl: "/ShadedPin.png",
   iconSize: [32, 42],
@@ -69,7 +68,7 @@ function FlyToNomination({ nomination }) {
       map.flyTo(
         [nomination.location.latitude, nomination.location.longitude],
         16,
-        { duration: 1.2 }
+        { duration: 1.2 },
       );
     }
   }, [nomination]);
@@ -381,7 +380,13 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   );
 }
 
-function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [], onNewNomination, preSelectedId }) {
+function LeafletMap({
+  isPinDropMode,
+  setIsPinDropMode,
+  nominations = [],
+  onNewNomination,
+  preSelectedId,
+}) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -404,8 +409,8 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [], onNewNo
   // filter nominations based on toggle
   const visibleNominations = showOnlyMine
     ? nominations.filter(
-      (n) => user && String(n.nominatorId) === String(user.id),
-    )
+        (n) => user && String(n.nominatorId) === String(user.id),
+      )
     : nominations;
 
   // auto-select nomination when navigated from nominations page
@@ -423,39 +428,39 @@ function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [], onNewNo
   const handleAISuggest = async () => {
     setAiLoading(true);
     try {
-      // Mock Suggestions to refrain from burning api calls
-      const mockSuggestions = [
-        {
-          lat: 49.2827,
-          lng: -123.1207,
-          reason: "Busy downtown intersection with minimal tree canopy.",
-        },
-        {
-          lat: 49.2662,
-          lng: -123.161,
-          reason: "West 4th Ave commercial strip with high sun exposure.",
-        },
-        {
-          lat: 49.2608,
-          lng: -123.1009,
-          reason: "Main Street with limited mature street trees.",
-        },
-      ];
-      setSuggestions(mockSuggestions);
-      // const res = await fetch(
-      //   `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/ai/suggest`,
+      // // Mock Suggestions to refrain from burning api calls
+      // const mockSuggestions = [
       //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ treeData: [], nominations: [] }),
+      //     lat: 49.2827,
+      //     lng: -123.1207,
+      //     reason: "Busy downtown intersection with minimal tree canopy.",
       //   },
-      // );
-      // const data = await res.json();
-      // if (data.suggestions && Array.isArray(data.suggestions)) {
-      //   setSuggestions(data.suggestions);
-      // } else {
-      //   console.error("Invalid suggestions format:", JSON.stringify(data));
-      // }
+      //   {
+      //     lat: 49.2662,
+      //     lng: -123.161,
+      //     reason: "West 4th Ave commercial strip with high sun exposure.",
+      //   },
+      //   {
+      //     lat: 49.2608,
+      //     lng: -123.1009,
+      //     reason: "Main Street with limited mature street trees.",
+      //   },
+      // ];
+      // setSuggestions(mockSuggestions);
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5001"}/api/ai/suggest`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ treeData: [], nominations: [] }),
+        },
+      );
+      const data = await res.json();
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        setSuggestions(data.suggestions);
+      } else {
+        console.error("Invalid suggestions format:", JSON.stringify(data));
+      }
     } catch (err) {
       console.error("AI suggest failed:", err);
     } finally {
