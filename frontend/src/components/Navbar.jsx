@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, LogIn, X, LogOut } from "lucide-react";
+import { Home, Map, LogIn, X, LogOut, ClipboardList } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
@@ -23,6 +23,7 @@ function Navbar() {
     ? [
       { to: "/home", label: "Home", icon: Home },
       { to: "/map", label: "Map", icon: Map },
+      { to: "/nominations", label: "Nominations", icon: ClipboardList },
     ]
     : [
       { to: "/", label: "Home", icon: Home },

@@ -18,6 +18,7 @@ import NominationPopup from "./NominationPopup";
 import BlueMarkerSvg from "../assets/BlueMarker.svg";
 import AISuggester from "./AISuggester";
 
+
 const blackmarker = L.icon({
   iconUrl: "/ShadedPin.png",
   iconSize: [32, 42],
@@ -57,6 +58,21 @@ function RecenterMap({ lat, lng }) {
   useEffect(() => {
     map.setView([lat, lng], 16);
   }, [lat, lng]);
+  return null;
+}
+
+// fly to nomination coordinates when selected
+function FlyToNomination({ nomination }) {
+  const map = useMap();
+  useEffect(() => {
+    if (nomination?.location?.latitude && nomination?.location?.longitude) {
+      map.flyTo(
+        [nomination.location.latitude, nomination.location.longitude],
+        16,
+        { duration: 1.2 }
+      );
+    }
+  }, [nomination]);
   return null;
 }
 
@@ -365,12 +381,7 @@ function NominationPanel({ pin, onClose, onSubmit, onRemove }) {
   );
 }
 
-function LeafletMap({
-  isPinDropMode,
-  setIsPinDropMode,
-  nominations = [],
-  onNewNomination,
-}) {
+function LeafletMap({ isPinDropMode, setIsPinDropMode, nominations = [], onNewNomination, preSelectedId }) {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -390,11 +401,23 @@ function LeafletMap({
   const user = JSON.parse(localStorage.getItem("user"));
 
   // filter nominations based on toggle
+  // filter nominations based on toggle
   const visibleNominations = showOnlyMine
     ? nominations.filter(
-        (n) => user && String(n.nominatorId) === String(user.id),
-      )
+      (n) => user && String(n.nominatorId) === String(user.id),
+    )
     : nominations;
+
+  // auto-select nomination when navigated from nominations page
+  useEffect(() => {
+    if (preSelectedId && nominations.length > 0) {
+      const found = nominations.find((n) => n._id === preSelectedId);
+      if (found) {
+        setSelectedNominationId(preSelectedId);
+        setSelectedNomination(found);
+      }
+    }
+  }, [preSelectedId, nominations]);
 
   //AI suggestions
   const handleAISuggest = async () => {
@@ -758,6 +781,7 @@ function LeafletMap({
             setSelectedNominationId(nomination._id);
           }}
         />
+        <FlyToNomination nomination={selectedNomination} />
         <HeatmapLayer></HeatmapLayer>
         <AISuggester
           suggestions={suggestions}
