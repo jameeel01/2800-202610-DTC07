@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import { useState } from "react";
 import MapPage from "./pages/MapPage";
 import NominationPage from "./pages/NominationPage";
+import NominationDetailPage from "./pages/NominationDetailPage";
 
 function App() {
   const [isPinDropMode, setIsPinDropMode] = useState(false);
@@ -39,6 +40,7 @@ function App() {
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
           <Route path="/nominations" element={<NominationPage />} />
+          <Route path="/nomination/:id" element={<NominationDetailPage />} />
           <Route
             path="/nomination/:id/impact"
             element={<ImpactEstimatePage />}
