@@ -801,7 +801,7 @@ function LeafletMap({
           style={{
             position: "absolute",
             bottom: "64px",
-            right: "12px",
+            right: "20px",
             zIndex: 1000,
             padding: "10px 18px",
             background: "#1a1a2e",
@@ -906,7 +906,7 @@ function LeafletMap({
           style={{
             position: "absolute",
             bottom: "130px",
-            right: "10px",
+            right: "20px",
             zIndex: 1000,
             padding: "10px 18px",
             background: "#1a1a2e",

@@ -5,23 +5,35 @@ const aiMarker = (index) =>
   L.divIcon({
     html: `
     <div style="
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 200, 0, 0.85);
-      border: 3px solid #f59e0b;
-      border-radius: 50%;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 14px;
-      color: #1a1a2e;
-      box-shadow: 0 0 0 6px rgba(255,200,0,0.25);
-      animation: pulse 2s infinite;
-    ">${index + 1}</div>
+    ">
+      <div style="
+        width: 36px;
+        height: 36px;
+        background: rgba(26, 26, 46, 0.95);
+        border: 3px solid #4fc3f7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: #4fc3f7;
+        box-shadow: 0 0 0 4px rgba(79,195,247,0.25);
+        animation: pulse 2s infinite;
+      ">${index + 1}</div>
+      <div style="
+        width: 6px;
+        height: 14px;
+        background: #4fc3f7;
+        border-radius: 0 0 2px 2px;
+      "></div>
+    </div>
   `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [36, 50],
+    iconAnchor: [18, 50],
     className: "",
   });
 
