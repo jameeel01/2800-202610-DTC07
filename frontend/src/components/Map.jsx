@@ -459,7 +459,7 @@ function LeafletMap({
       if (data.suggestions && Array.isArray(data.suggestions)) {
         setSuggestions(data.suggestions);
       } else {
-        console.error("Invalid suggestions format:", JSON.stringify(data));
+        showNotification(data.error || "Failed to get suggestions.");
       }
     } catch (err) {
       console.error("AI suggest failed:", err);
