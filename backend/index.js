@@ -528,7 +528,7 @@ app.get("/api/impact/:upvotes", (req, res) => {
 
 // in-memory rate limiter for AI endpoint
 const aiRateLimit = new Map();
-const AI_RATE_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+const AI_RATE_LIMIT_MS = 0; // 10 minutes
 
 function checkAIRateLimit(userId) {
   const now = Date.now();
