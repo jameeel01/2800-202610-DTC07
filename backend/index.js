@@ -589,6 +589,26 @@ app.post(
         return res.status(400).json({ error: "No file provided" });
       }
 
+      // validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ error: "File size must be under 5MB" });
+      }
+
+      // validate file type (images and PDF only)
+      const allowedMimes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+      ];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        return res.status(400).json({
+          error: "Only JPG, PNG, GIF, WebP, and PDF files are allowed",
+        });
+      }
+
       // upload to cloudinary from memory buffer
       const uploadStream = cloudinary.uploader.upload_stream(
         {
