@@ -930,13 +930,13 @@ function LeafletMap({
 
       {/* AI button — only show if logged in */}
       {
-        !activePin && user && (
+        user && (
           <button
             onClick={handleAISuggest}
             style={{
               position: "absolute",
-              bottom: "128px",
-              right: "20px",
+              top: "80px",
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
               background: "#1a1a2e",
@@ -973,12 +973,12 @@ function LeafletMap({
 
       {/* toggle between all nominations and user's own — only show if logged in */}
       {
-        !activePin && user && (
+        user && (
           <button
             onClick={() => setShowOnlyMine((prev) => !prev)}
             style={{
               position: "absolute",
-              bottom: "68px",
+              top: "80px",
               left: "16px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -1025,8 +1025,8 @@ function LeafletMap({
           <div
             style={{
               position: "absolute",
-              bottom: "200px",
-              right: "20px",
+              top: "192px",
+              right: "16px",
               zIndex: 1000,
               background: "#1a1a2e",
               color: "white",
@@ -1048,8 +1048,8 @@ function LeafletMap({
             onClick={() => setSuggestions([])}
             style={{
               position: "absolute",
-              bottom: "148px",
-              right: "20px",
+              top: "248px",
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
               background: "#1a1a2e",
@@ -1080,8 +1080,8 @@ function LeafletMap({
             }}
             style={{
               position: "absolute",
-              bottom: "68px",
-              right: "20px",
+              top: "134px",
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
               background: "#2d6a0f",
