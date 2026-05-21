@@ -855,7 +855,7 @@ function LeafletMap({
       <MapContainer
         center={[49.24966, -123.11934]}
         zoom={13}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         style={{ flex: 1, height: "100%" }}
         whenReady={() => setMapReady(true)}
       >
