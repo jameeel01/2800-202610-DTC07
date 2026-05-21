@@ -927,7 +927,7 @@ function LeafletMap({
         />
         {/* fly to nomination when selected */}
         <FlyToNomination nomination={selectedNomination} />
-        <HeatmapLayer></HeatmapLayer>
+        <HeatmapLayer isPanelOpen={isPanelOpen} />
         <AISuggester
           suggestions={suggestions}
           onRemove={handleRemoveSuggestion}
@@ -935,50 +935,37 @@ function LeafletMap({
         />
       </MapContainer>
 
-      {/* AI button — only show if logged in */}
+      {/* AI button — row 2 right, only show if logged in */}
       {
         user && (
           <button
             onClick={handleAISuggest}
             style={{
               position: "absolute",
-              bottom: btnBottom,
+              bottom: `calc(${btnBottom} + 56px)`,
               right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
+              minWidth: "130px",
               background: "#1a1a2e",
               color: "#4fc3f7",
-              border: "2px solid #4fc3f7",
-              borderRadius: "8px",
+              border: "1px solid #4fc3f7",
+              borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
             }}
           >
-            {aiLoading ? (
-              "Finding spots..."
-            ) : (
-              <>
-                <img
-                  src="/src/assets/ai.png"
-                  width="32"
-                  height="32"
-                  style={{
-                    marginRight: "6px",
-                    filter:
-                      "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
-                  }}
-                />
-                Suggest a Spot
-              </>
-            )}
+            {aiLoading ? "Finding spots..." : "AI Suggest"}
           </button>
         )
       }
 
-      {/* toggle between all nominations and user's own — only show if logged in */}
+      {/* show mine toggle — row 1 left, only show if logged in */}
       {
         user && (
           <button
@@ -989,13 +976,14 @@ function LeafletMap({
               left: "16px",
               zIndex: 1000,
               padding: "10px 18px",
-              background: "#2d6a0f",
+              minWidth: "130px",
+              background: showOnlyMine ? "#344e41" : "#2d6a0f",
               color: "white",
-              border: "none",
+              border: showOnlyMine ? "1px solid #a3b18a" : "none",
               borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
             }}
           >
             {showOnlyMine ? "Show All" : "Show Mine"}
@@ -1087,17 +1075,18 @@ function LeafletMap({
             }}
             style={{
               position: "absolute",
-              bottom: `calc(${btnBottom} + 56px)`,
+              bottom: btnBottom,
               right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
+              minWidth: "130px",
               background: "#2d6a0f",
               color: "white",
               border: "none",
               borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
             }}
           >
             Nominate +
