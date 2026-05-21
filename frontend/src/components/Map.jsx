@@ -46,6 +46,8 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
   useMapEvents({
     click(e) {
       if (!isPinDropMode) return;
+      // Ignore clicks that originated from a button or interactive element
+      if (e.originalEvent.target.closest("button, a, input")) return;
       onPanelClose();
       onPinPlaced(e.latlng);
     },
@@ -422,6 +424,10 @@ function LeafletMap({
   const [selectedNominationId, setSelectedNominationId] = useState(null);
   const [selectedNomination, setSelectedNomination] = useState(null);
   const [localNominations, setLocalNominations] = useState([]);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  // button bottom position floats above the nominations panel
+  const btnBottom = isPanelOpen ? "calc(55% + 16px)" : "68px";
   const [suggestions, setSuggestions] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
@@ -672,6 +678,8 @@ function LeafletMap({
         display: "flex",
         position: "relative",
         zIndex: 0,
+        width: "100%",
+        overflow: "hidden",
       }}
     >
       {!mapReady && <LoadingSpinner></LoadingSpinner>}
@@ -679,8 +687,6 @@ function LeafletMap({
       {/* Onboarding tour, shows automatically on first visit */}
       <OnboardingTour onRestartRef={tourRestartRef} />
 
-      {/* Restart tour button, always visible bottom-left */}
-      <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
 
       {/* nomination popup */}
       {selectedNomination && (
@@ -855,7 +861,10 @@ function LeafletMap({
       <MapContainer
         center={[49.24966, -123.11934]}
         zoom={13}
-        scrollWheelZoom={false}
+        minZoom={11}
+        maxBounds={[[48.9, -123.6], [49.6, -122.4]]}
+        maxBoundsViscosity={1.0}
+        scrollWheelZoom={true}
         style={{ flex: 1, height: "100%" }}
         whenReady={() => setMapReady(true)}
       >
@@ -912,6 +921,7 @@ function LeafletMap({
         <NominationsPanel
           isOpen={showNominations}
           onClose={() => setShowNominations(false)}
+          onOpenChange={setIsPanelOpen}
           onNominationSelect={(nomination) => {
             setSelectedNomination(nomination);
             setSelectedNominationId(nomination._id);
@@ -919,7 +929,7 @@ function LeafletMap({
         />
         {/* fly to nomination when selected */}
         <FlyToNomination nomination={selectedNomination} />
-        <HeatmapLayer></HeatmapLayer>
+        <HeatmapLayer isPanelOpen={isPanelOpen} />
         <AISuggester
           suggestions={suggestions}
           onRemove={handleRemoveSuggestion}
@@ -927,67 +937,57 @@ function LeafletMap({
         />
       </MapContainer>
 
-      {/* AI button — only show if logged in */}
+      {/* AI button — row 2 right, only show if logged in and not actively nominating */}
       {
-        !activePin && user && (
+        user && !activePin && (
           <button
             onClick={handleAISuggest}
             style={{
               position: "absolute",
-              bottom: "64px",
-              right: "20px",
+              bottom: `calc(${btnBottom} + 56px)`,
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
+              minWidth: "130px",
               background: "#1a1a2e",
               color: "#4fc3f7",
-              border: "2px solid #4fc3f7",
-              borderRadius: "8px",
+              border: "1px solid #4fc3f7",
+              borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              transition: "bottom 0.3s ease",
             }}
           >
-            {aiLoading ? (
-              "Finding spots..."
-            ) : (
-              <>
-                <img
-                  src="/src/assets/ai.png"
-                  width="32"
-                  height="32"
-                  style={{
-                    marginRight: "6px",
-                    filter:
-                      "brightness(0) saturate(100%) invert(72%) sepia(98%) saturate(400%) hue-rotate(167deg) brightness(101%)",
-                  }}
-                />
-                Suggest a Spot
-              </>
-            )}
+            {aiLoading ? "Finding spots..." : "AI Suggest"}
           </button>
         )
       }
 
-      {/* toggle between all nominations and user's own — only show if logged in */}
+      {/* show mine toggle — row 1 left, only show if logged in */}
       {
-        !activePin && user && (
+        user && (
           <button
             onClick={() => setShowOnlyMine((prev) => !prev)}
             style={{
               position: "absolute",
-              bottom: "64px",
+              bottom: btnBottom,
               left: "16px",
               zIndex: 1000,
               padding: "10px 18px",
-              background: "#2d6a0f",
+              minWidth: "130px",
+              background: showOnlyMine ? "#344e41" : "#2d6a0f",
               color: "white",
-              border: "none",
+              border: showOnlyMine ? "1px solid #a3b18a" : "none",
               borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
+              transition: "bottom 0.3s ease",
             }}
           >
             {showOnlyMine ? "Show All" : "Show Mine"}
@@ -1024,8 +1024,8 @@ function LeafletMap({
           <div
             style={{
               position: "absolute",
-              bottom: "180px",
-              right: "20px",
+              top: "192px",
+              right: "16px",
               zIndex: 1000,
               background: "#1a1a2e",
               color: "white",
@@ -1047,8 +1047,8 @@ function LeafletMap({
             onClick={() => setSuggestions([])}
             style={{
               position: "absolute",
-              bottom: "130px",
-              right: "20px",
+              top: "248px",
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
               background: "#1a1a2e",
@@ -1079,17 +1079,19 @@ function LeafletMap({
             }}
             style={{
               position: "absolute",
-              bottom: "20px",
-              right: "20px",
+              bottom: btnBottom,
+              right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
+              minWidth: "130px",
               background: "#2d6a0f",
               color: "white",
               border: "none",
               borderRadius: "2px",
               cursor: "pointer",
               fontWeight: "bold",
-              fontSize: "14px",
+              fontSize: "13px",
+              transition: "bottom 0.3s ease",
             }}
           >
             Nominate +

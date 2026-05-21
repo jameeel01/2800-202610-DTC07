@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import logo from "../assets/Shaded.png";
+
+function cleanTitle(title) {
+    if (!title) return title;
+    return title
+        .split(", Vancouver")[0]
+        .split(", BC")[0]
+        .split(", British Columbia")[0]
+        .split(", Canada")[0];
+}
 import {
     calculateTreeCount,
     calculateTempReduction,
@@ -33,7 +43,7 @@ function NominationCard({ nomination, type }) {
                 <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0 pr-3">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold bg-[#2d5a27] text-white px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold bg-[#4a7c59] text-white px-2 py-0.5 rounded-full">
                                 {nomination.status || "pending"}
                             </span>
                             {type === "upvoted" && (
@@ -43,22 +53,21 @@ function NominationCard({ nomination, type }) {
                             )}
                         </div>
                         <h3 className="text-[14px] font-bold text-[#1a3a1a] truncate">
-                            {nomination.title}
+                            {cleanTitle(nomination.title)}
                         </h3>
                         <p className="text-[11px] text-[#588157] mt-0.5">
                             by {nomination.nominatorName}
                         </p>
                     </div>
-                    <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="flex flex-col items-center bg-[#f0f7f0] rounded-xl px-3 py-2 border border-[#A3B18A]">
-                            <span className="text-[#2d5a27] text-sm">▲</span>
-                            <span className="text-[13px] font-bold text-[#2d5a27]">
-                                {nomination.upvoteCount}
-                            </span>
-                        </div>
-                        <span className="text-gray-400 text-xs">
-                            {isExpanded ? "▲" : "▼"}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <span className="text-[12px] font-semibold text-[#344e41] whitespace-nowrap">
+                            {nomination.upvoteCount} upvotes
                         </span>
+                        <ChevronDown
+                            size={16}
+                            className="text-gray-400 transition-transform duration-200"
+                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
                     </div>
                 </div>
                 <div className="flex gap-3 mt-2 text-[11px] text-[#588157] font-semibold">
@@ -72,17 +81,14 @@ function NominationCard({ nomination, type }) {
             {isExpanded && (
                 <div className="border-t border-[#A3B18A] p-4">
                     <p className="text-[13px] text-[#344E41] mb-4 leading-relaxed">
-                        {nomination.description}
+                        {nomination.description || "No description provided."}
                     </p>
                     <button
-                        onClick={() =>
-                            navigate("/map", {
-                                state: { selectedNominationId: nomination._id },
-                            })
-                        }
-                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-xl text-[13px] font-bold"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/nomination/${nomination._id}`); }}
+                        className="w-full py-2.5 bg-[#344e41] text-white text-[13px] font-bold"
+                        style={{ borderRadius: "2px" }}
                     >
-                        View on Map
+                        View Details
                     </button>
                 </div>
             )}
@@ -239,7 +245,7 @@ function Profile() {
     return (
         <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
             {/* top navbar — desktop only */}
-            <div className="hidden sm:flex w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
+            <div className="hidden sm:flex w-full bg-[#4a7c59] px-6 py-3 justify-between items-center">
                 <img src={logo} alt="Shaded logo" className="h-12" />
             </div>
 
@@ -261,7 +267,7 @@ function Profile() {
 
                         {/* avatar + name */}
                         <div className="bg-white rounded-2xl border border-[#A3B18A] p-6 flex flex-col items-center text-center">
-                            <div className="w-20 h-20 rounded-full bg-[#2d5a27] flex items-center justify-center text-white text-3xl font-black mb-4">
+                            <div className="w-20 h-20 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-3xl font-black mb-4">
                                 {initials}
                             </div>
                             <h1 className="text-xl font-bold text-[#1a3a1a]">{user?.name}</h1>
@@ -311,7 +317,7 @@ function Profile() {
                                     <button
                                         onClick={handleSaveName}
                                         disabled={nameSaving}
-                                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
+                                        className="w-full py-2.5 bg-[#4a7c59] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
                                     >
                                         {nameSaving ? "Saving..." : "Save Name"}
                                     </button>
@@ -373,7 +379,7 @@ function Profile() {
                                     <button
                                         onClick={handleChangePassword}
                                         disabled={passwordSaving}
-                                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
+                                        className="w-full py-2.5 bg-[#4a7c59] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
                                     >
                                         {passwordSaving ? "Saving..." : "Change Password"}
                                     </button>
@@ -401,7 +407,7 @@ function Profile() {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-2 rounded-full text-[12px] font-bold border transition-colors ${activeTab === tab
-                                        ? "bg-[#2d5a27] text-white border-[#2d5a27]"
+                                        ? "bg-[#4a7c59] text-white border-[#2d5a27]"
                                         : "bg-white text-[#2d5a27] border-[#2d5a27]"
                                         }`}
                                 >

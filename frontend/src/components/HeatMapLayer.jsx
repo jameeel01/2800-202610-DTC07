@@ -4,7 +4,7 @@ import { fetchShadeData } from "../utils/shadeCalc";
 import L from "leaflet";
 import "leaflet.heat";
 
-function HeatmapLayer() {
+function HeatmapLayer({ isPanelOpen }) {
   const map = useMap();
   const [showHeatMap, setShowHeatMap] = useState(true);
   const heatLayerRef = useRef(null);
@@ -42,23 +42,29 @@ function HeatmapLayer() {
     setShowHeatMap((prev) => !prev);
   };
 
+  const btnBottom = isPanelOpen ? "calc(55% + 72px)" : "124px";
+
   return (
     <div
       style={{
         position: "absolute",
-        bottom: "24px",
+        bottom: btnBottom,
         left: "16px",
         zIndex: 1000,
+        transition: "bottom 0.3s ease",
       }}
     >
       <button
         onClick={handleToggle}
         style={{
           padding: "10px 18px",
-          background: "#2d6a0f",
+          minWidth: "130px",
+          background: showHeatMap ? "#2d6a0f" : "#344e41",
           color: "white",
+          border: showHeatMap ? "none" : "1px solid #a3b18a",
           borderRadius: "2px",
           fontWeight: "bold",
+          fontSize: "13px",
           cursor: "pointer",
         }}
       >

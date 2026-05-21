@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 .leaflet-container {
-  height: 900px;
   width: 100%;
+  /* mobile: subtract mobile top navbar height */
+  height: calc(100vh - 56px);
+}
+
+@media (min-width: 640px) {
+  .leaflet-container {
+    /* desktop: bottom navbar is fixed, doesn't affect flow */
+    height: 100vh;
+  }
 }
 
 @keyframes shake {

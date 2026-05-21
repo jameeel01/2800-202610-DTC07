@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import {
     calculateTreeCount,
     calculateTempReduction,
     calculateShadeArea,
-    calculateCO2,
-    calculateCommunityStars,
 } from "../utils/shadeCalc";
-import StarRating from "../components/StarRating";
-import StatCard from "../components/StatCard";
 import logo from "../assets/Shaded.png";
+
+function cleanTitle(title) {
+    if (!title) return title;
+    return title
+        .split(", Vancouver")[0]
+        .split(", BC")[0]
+        .split(", British Columbia")[0]
+        .split(", Canada")[0];
+}
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 const FILTERS = ["All", "Recent", "Most Upvoted", "Mine"];
@@ -22,11 +28,13 @@ function NominationCard({ nomination }) {
     const trees = calculateTreeCount(nomination.upvoteCount);
     const temp = calculateTempReduction(trees);
     const shade = calculateShadeArea(trees);
-    const co2 = calculateCO2(trees);
-    const stars = calculateCommunityStars(nomination.upvoteCount);
     const [isExpanded, setIsExpanded] = useState(false);
     const [upvoteCount, setUpvoteCount] = useState(nomination.upvoteCount);
-    const [hasUpvoted, setHasUpvoted] = useState(nomination.hasUpvoted || false);
+    const [hasUpvoted, setHasUpvoted] = useState(
+        Array.isArray(nomination.upvoterIds) && user
+            ? nomination.upvoterIds.some((id) => String(id) === String(user.id))
+            : false
+    );
 
     const handleUpvote = async (e) => {
         e.stopPropagation();
@@ -44,8 +52,8 @@ function NominationCard({ nomination }) {
             );
             const data = await res.json();
             if (res.ok) {
-                setUpvoteCount(data.upvoteCount);
-                setHasUpvoted(data.hasUpvoted);
+                setUpvoteCount(data.upvoteCount ?? upvoteCount + (hasUpvoted ? -1 : 1));
+                setHasUpvoted((prev) => !prev);
             }
         } catch (err) {
             console.error("Upvote error:", err);
@@ -68,7 +76,7 @@ function NominationCard({ nomination }) {
                     <div className="flex-1 min-w-0 pr-3">
                         {/* badges */}
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold bg-[#2d5a27] text-white px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold bg-[#4a7c59] text-white px-2 py-0.5 rounded-full">
                                 {nomination.status || "pending"}
                             </span>
                             {isOwn && (
@@ -78,81 +86,57 @@ function NominationCard({ nomination }) {
                             )}
                         </div>
                         <h3 className="text-[15px] font-bold text-gray-900 truncate">
-                            {nomination.title}
+                            {cleanTitle(nomination.title)}
                         </h3>
                         <p className="text-[11px] text-gray-400 mt-0.5">
                             by {isOwn ? "you" : nomination.nominatorName}
                         </p>
                     </div>
 
-                    {/* upvote count + chevron */}
-                    <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="flex flex-col items-center bg-[#f0f7f0] rounded-xl px-3 py-2 border border-gray-200">
-                            <span className="text-[#2d5a27] text-sm">▲</span>
-                            <span className="text-[13px] font-bold text-[#2d5a27]">
-                                {upvoteCount}
-                            </span>
-                        </div>
-                        <span className="text-gray-400 text-xs">
-                            {isExpanded ? "▲" : "▼"}
+                    {/* upvote count + expand indicator */}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <span className="text-[12px] font-semibold text-[#344e41] whitespace-nowrap">
+                            {upvoteCount} upvotes
                         </span>
+                        <ChevronDown
+                            size={16}
+                            className="text-gray-400 transition-transform duration-200"
+                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
                     </div>
                 </div>
 
-                {/* mini impact row */}
+                {/* impact summary */}
                 <div className="flex gap-3 mt-2 text-[11px] text-[#2d5a27] font-semibold">
-                    <span> {trees} trees</span>
-                    <span> -{temp}°C</span>
-                    <span> {shade}m²</span>
+                    <span>{trees} trees</span>
+                    <span>-{temp}°C</span>
+                    <span>{shade}m²</span>
                 </div>
             </div>
 
-            {/* expanded dropdown content */}
+            {/* expanded dropdown */}
             {isExpanded && (
                 <div className="border-t border-gray-100 p-4">
-                    {/* description */}
-                    <p className="text-[13px] text-gray-500 mb-4 leading-relaxed">
-                        {nomination.description}
+                    <p className="text-[13px] text-gray-600 mb-4 leading-relaxed">
+                        {nomination.description || "No description provided."}
                     </p>
-
-                    {/* full impact stats */}
-                    <div className="flex flex-col gap-3 mb-4">
-                        <StatCard
-                            value={`-${temp}°C`}
-                            label="Temperature Reduction"
-                            subtext="Within 50m radius"
-                        />
-                        <StatCard
-                            value={`${shade} m²`}
-                            label="Shade Coverage"
-                            subtext="During peak sun"
-                        />
-                        <StatCard
-                            value={`${co2} kg/yr`}
-                            label="CO₂ Absorption"
-                            subtext="Annual carbon absorbed"
-                        />
-                        <StatCard label="Community Impact" subtext="Upvotes & proximity">
-                            <StarRating stars={stars} />
-                        </StatCard>
-                    </div>
-
-                    {/* action buttons */}
                     <div className="flex gap-2">
                         <button
                             onClick={handleUpvote}
-                            className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${hasUpvoted
-                                ? "bg-white text-[#2d5a27] border-2 border-[#2d5a27]"
-                                : "bg-[#2d5a27] text-white"
+                            style={{ borderRadius: "2px" }}
+                            className={`flex-1 py-2.5 text-[13px] font-bold transition-colors border ${hasUpvoted
+                                ? "bg-[#344e41] text-white border-[#344e41]"
+                                : "bg-white text-[#344e41] border-[#344e41]"
                                 }`}
                         >
-                            {!token ? "Log in to upvote" : hasUpvoted ? " Upvoted" : " Upvote"}
+                            {!token ? "Log in to upvote" : hasUpvoted ? `${upvoteCount} Upvoted` : `${upvoteCount} Upvote`}
                         </button>
                         <button
-                            onClick={handleViewOnMap}
-                            className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[13px] font-bold transition-colors"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/nomination/${nomination._id}`); }}
+                            style={{ borderRadius: "2px" }}
+                            className="flex-1 py-2.5 bg-[#344e41] text-white text-[13px] font-bold"
                         >
-                            View on Map
+                            View Details
                         </button>
                     </div>
                 </div>
@@ -198,7 +182,7 @@ function NominationPage() {
     return (
         <div className="min-h-screen bg-[#f0f7f0]">
             {/* header with shaded logo — desktop only */}
-            <div className="hidden sm:flex w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
+            <div className="hidden sm:flex w-full bg-[#4a7c59] px-6 py-3 justify-between items-center">
                 <img src={logo} alt="Shaded logo" className="h-12" />
             </div>
 
@@ -219,7 +203,7 @@ function NominationPage() {
                             key={f}
                             onClick={() => setActiveFilter(f)}
                             className={`px-4 py-2 rounded-full text-[12px] font-bold whitespace-nowrap border transition-colors ${activeFilter === f
-                                ? "bg-[#2d5a27] text-white border-[#2d5a27]"
+                                ? "bg-[#4a7c59] text-white border-[#2d5a27]"
                                 : "bg-white text-[#2d5a27] border-[#2d5a27]"
                                 }`}
                         >
