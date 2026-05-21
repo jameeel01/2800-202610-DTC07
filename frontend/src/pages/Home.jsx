@@ -34,7 +34,7 @@ function Home() {
 
         {/* Welcome */}
         <div className="space-y-2 text-center">
-          <img src={logo} alt="Shaded" className="h-[67px] mx-auto mb-2" />
+          <img src={logo} alt="Shaded" className="h-20 mx-auto mb-2" />
           <p className="text-white/60 text-sm font-semibold uppercase tracking-widest">
             Welcome back
           </p>
