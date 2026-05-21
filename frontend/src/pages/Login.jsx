@@ -38,7 +38,7 @@ function Login() {
   return (
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col ">
       {/* top navbar */}
-      <div className="hidden sm:flex lg:w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
+      <div className="hidden sm:flex lg:w-full bg-[#4a7c59] px-6 py-3 justify-between items-center">
         <img src={logo} alt="Shaded logo" className="h-12" />
         <Link to="/signup" className="text-white text-sm">
           Sign Up
@@ -96,7 +96,7 @@ function Login() {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full py-3 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold mt-2 disabled:opacity-60"
+            className="w-full py-3 bg-[#4a7c59] text-white rounded-lg text-sm font-semibold mt-2 disabled:opacity-60"
           >
             {loading ? "Logging in..." : "Log In"}
           </button>

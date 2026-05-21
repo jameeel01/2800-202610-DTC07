@@ -91,7 +91,7 @@ function AuthPage() {
     <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
 
       {/* header */}
-      <div className="bg-[#344e41] px-6 py-4 flex items-center justify-between">
+      <div className="bg-[#4a7c59] px-6 py-4 flex items-center justify-between">
         <img src={logo} alt="Shaded" className="h-10" />
         <button
           onClick={() => navigate(-1)}

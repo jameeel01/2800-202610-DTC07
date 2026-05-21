@@ -43,7 +43,7 @@ function NominationCard({ nomination, type }) {
                 <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0 pr-3">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold bg-[#2d5a27] text-white px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold bg-[#4a7c59] text-white px-2 py-0.5 rounded-full">
                                 {nomination.status || "pending"}
                             </span>
                             {type === "upvoted" && (
@@ -245,7 +245,7 @@ function Profile() {
     return (
         <div className="min-h-screen bg-[#f0f7f0] flex flex-col">
             {/* top navbar — desktop only */}
-            <div className="hidden sm:flex w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
+            <div className="hidden sm:flex w-full bg-[#4a7c59] px-6 py-3 justify-between items-center">
                 <img src={logo} alt="Shaded logo" className="h-12" />
             </div>
 
@@ -267,7 +267,7 @@ function Profile() {
 
                         {/* avatar + name */}
                         <div className="bg-white rounded-2xl border border-[#A3B18A] p-6 flex flex-col items-center text-center">
-                            <div className="w-20 h-20 rounded-full bg-[#2d5a27] flex items-center justify-center text-white text-3xl font-black mb-4">
+                            <div className="w-20 h-20 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-3xl font-black mb-4">
                                 {initials}
                             </div>
                             <h1 className="text-xl font-bold text-[#1a3a1a]">{user?.name}</h1>
@@ -317,7 +317,7 @@ function Profile() {
                                     <button
                                         onClick={handleSaveName}
                                         disabled={nameSaving}
-                                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
+                                        className="w-full py-2.5 bg-[#4a7c59] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
                                     >
                                         {nameSaving ? "Saving..." : "Save Name"}
                                     </button>
@@ -379,7 +379,7 @@ function Profile() {
                                     <button
                                         onClick={handleChangePassword}
                                         disabled={passwordSaving}
-                                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
+                                        className="w-full py-2.5 bg-[#4a7c59] text-white rounded-lg text-sm font-semibold disabled:opacity-60"
                                     >
                                         {passwordSaving ? "Saving..." : "Change Password"}
                                     </button>
@@ -407,7 +407,7 @@ function Profile() {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-2 rounded-full text-[12px] font-bold border transition-colors ${activeTab === tab
-                                        ? "bg-[#2d5a27] text-white border-[#2d5a27]"
+                                        ? "bg-[#4a7c59] text-white border-[#2d5a27]"
                                         : "bg-white text-[#2d5a27] border-[#2d5a27]"
                                         }`}
                                 >
