@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import mapImg from "../assets/Map.jpg";
+import logo from "../assets/Shaded.png";
 
 function LandingPage() {
   return (
@@ -22,6 +23,7 @@ function LandingPage() {
       {/* Content */}
       <div className="relative z-10 w-full max-w-md space-y-6 sm:space-y-8 mt-12 sm:mt-16">
         <div className="space-y-2">
+          <img src={logo} alt="Shaded" className="h-24 mx-auto mb-4" />
           <h1 className="text-5xl sm:text-7xl font-black leading-tight drop-shadow-lg text-center">
             Shade<br />Vancouver<br />Together.
           </h1>
