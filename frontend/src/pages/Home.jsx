@@ -53,6 +53,20 @@ function Home() {
           >
             View the Map
           </Link>
+          <Link
+            to="/nominations"
+            className="block w-full bg-[#344e41] hover:bg-[#2d4438] text-white font-bold py-4 px-6 text-center text-base transition-colors border border-white/20"
+            style={{ borderRadius: "2px" }}
+          >
+            View Nominations
+          </Link>
+          <Link
+            to="/profile"
+            className="block w-full bg-[#344e41] hover:bg-[#2d4438] text-white font-bold py-4 px-6 text-center text-base transition-colors border border-white/20"
+            style={{ borderRadius: "2px" }}
+          >
+            My Profile
+          </Link>
           <button
             onClick={handleLogout}
             className="block w-full bg-transparent hover:bg-white/10 text-white/70 font-semibold py-3 px-6 text-center text-sm transition-colors border border-white/20 w-full"

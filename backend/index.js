@@ -764,6 +764,46 @@ app.post(
   },
 );
 
+// update user name
+app.patch("/api/auth/update-name", verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: "Name is required" });
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { name: name.trim() },
+      { new: true }
+    );
+
+    res.json({ message: "Name updated", user: formatUserResponse(user) });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update name" });
+  }
+});
+
+// change password
+app.patch("/api/auth/change-password", verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ error: "All fields are required" });
+
+    const user = await User.findById(req.user.userId);
+    const match = await bcryptjs.compare(currentPassword, user.password);
+    if (!match)
+      return res.status(401).json({ error: "Current password is incorrect" });
+
+    const hashed = await bcryptjs.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to change password" });
+  }
+});
+
 // 404 catch-all
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
