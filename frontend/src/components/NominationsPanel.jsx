@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -9,30 +9,39 @@ function NominationsPanel({ onNominationSelect }) {
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const startY = useRef(null);
   const panelRef = useRef(null);
+  const dragHandleRef = useRef(null);
   const closeBtnRef = useRef(null);
 
-  // Use native event listeners for buttons to avoid Leaflet click propagation blocking React
+  // Add native listeners BEFORE disableClickPropagation so they run first
   useEffect(() => {
-    if (panelRef.current) {
-      L.DomEvent.disableScrollPropagation(panelRef.current);
-      // Stop map drag when interacting with panel (without blocking click events)
-      L.DomEvent.on(panelRef.current, "mousedown touchstart", L.DomEvent.stopPropagation);
-    }
+    const panel = panelRef.current;
+    const handle = dragHandleRef.current;
+
+    if (!panel || !handle) return;
+
+    const toggle = () => setIsOpen((prev) => !prev);
+
+    // Attach to drag handle natively — runs before Leaflet's stopPropagation
+    handle.addEventListener("click", toggle);
+
+    // Now disable click propagation on the whole panel so map doesn't react
+    L.DomEvent.disableClickPropagation(panel);
+    L.DomEvent.disableScrollPropagation(panel);
+
+    return () => {
+      handle.removeEventListener("click", toggle);
+    };
   }, []);
 
-  // Attach close button via native listener so Leaflet doesn't block it
+  // Close button native listener
   useEffect(() => {
     const btn = closeBtnRef.current;
     if (!btn) return;
-    const handler = (e) => {
-      e.stopPropagation();
-      setIsOpen(false);
-    };
-    btn.addEventListener("click", handler);
-    return () => btn.removeEventListener("click", handler);
-  }, []);
+    const close = (e) => { e.stopPropagation(); setIsOpen(false); };
+    btn.addEventListener("click", close);
+    return () => btn.removeEventListener("click", close);
+  }, [isOpen]); // re-run when isOpen changes so ref is attached after render
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/nominations`)
@@ -44,7 +53,7 @@ function NominationsPanel({ onNominationSelect }) {
       .catch(() => setLoading(false));
   }, []);
 
-  const handleNominationClick = (nomination) => {
+  const handleNominationClick = useCallback((nomination) => {
     const lat = nomination.location?.latitude;
     const lng = nomination.location?.longitude;
     if (lat && lng) {
@@ -52,20 +61,7 @@ function NominationsPanel({ onNominationSelect }) {
     }
     if (onNominationSelect) onNominationSelect(nomination);
     setIsOpen(false);
-  };
-
-  const handleTouchStart = (e) => { startY.current = e.touches[0].clientY; };
-  const handleTouchEnd = (e) => {
-    const diff = startY.current - e.changedTouches[0].clientY;
-    if (diff > 50) setIsOpen(true);
-    if (diff < -50) setIsOpen(false);
-  };
-  const handleMouseDown = (e) => { startY.current = e.clientY; };
-  const handleMouseUp = (e) => {
-    const diff = startY.current - e.clientY;
-    if (diff > 30) setIsOpen(true);
-    if (diff < -30) setIsOpen(false);
-  };
+  }, [map, onNominationSelect]);
 
   return (
     <div
@@ -86,12 +82,9 @@ function NominationsPanel({ onNominationSelect }) {
         transition: "transform 0.3s ease",
       }}
     >
-      {/* header — drag handle + title + close button */}
+      {/* drag handle — native click attached via ref */}
       <div
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
+        ref={dragHandleRef}
         style={{
           padding: "10px 16px 8px",
           display: "flex",
@@ -100,7 +93,7 @@ function NominationsPanel({ onNominationSelect }) {
           gap: "6px",
           cursor: "pointer",
           flexShrink: 0,
-          position: "relative",
+          userSelect: "none",
         }}
       >
         <div style={{ width: "36px", height: "4px", background: "#ccc", borderRadius: "2px" }} />
@@ -110,14 +103,13 @@ function NominationsPanel({ onNominationSelect }) {
             {isOpen ? `${nominations.length} nominations near you` : "Nominations near you"}
           </span>
 
-          {/* close button — native listener via ref */}
           {isOpen && (
             <button
               ref={closeBtnRef}
               style={{
                 background: "none",
                 border: "none",
-                fontSize: "18px",
+                fontSize: "20px",
                 color: "#9ca3af",
                 cursor: "pointer",
                 lineHeight: 1,

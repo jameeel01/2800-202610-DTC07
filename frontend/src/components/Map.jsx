@@ -679,8 +679,6 @@ function LeafletMap({
       {/* Onboarding tour, shows automatically on first visit */}
       <OnboardingTour onRestartRef={tourRestartRef} />
 
-      {/* Restart tour button, always visible bottom-left */}
-      <TourRestartButton onRestart={() => tourRestartRef.current?.()} />
 
       {/* nomination popup */}
       {selectedNomination && (
@@ -934,7 +932,7 @@ function LeafletMap({
             onClick={handleAISuggest}
             style={{
               position: "absolute",
-              bottom: "64px",
+              bottom: "128px",
               right: "20px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -977,7 +975,7 @@ function LeafletMap({
             onClick={() => setShowOnlyMine((prev) => !prev)}
             style={{
               position: "absolute",
-              bottom: "64px",
+              bottom: "68px",
               left: "16px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -1024,7 +1022,7 @@ function LeafletMap({
           <div
             style={{
               position: "absolute",
-              bottom: "180px",
+              bottom: "200px",
               right: "20px",
               zIndex: 1000,
               background: "#1a1a2e",
@@ -1047,7 +1045,7 @@ function LeafletMap({
             onClick={() => setSuggestions([])}
             style={{
               position: "absolute",
-              bottom: "130px",
+              bottom: "148px",
               right: "20px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -1079,7 +1077,7 @@ function LeafletMap({
             }}
             style={{
               position: "absolute",
-              bottom: "20px",
+              bottom: "68px",
               right: "20px",
               zIndex: 1000,
               padding: "10px 18px",
