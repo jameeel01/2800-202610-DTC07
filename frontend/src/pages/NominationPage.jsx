@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import {
     calculateTreeCount,
     calculateTempReduction,
     calculateShadeArea,
 } from "../utils/shadeCalc";
 import logo from "../assets/Shaded.png";
+
+function cleanTitle(title) {
+    if (!title) return title;
+    return title
+        .split(", Vancouver")[0]
+        .split(", BC")[0]
+        .split(", British Columbia")[0]
+        .split(", Canada")[0];
+}
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 const FILTERS = ["All", "Recent", "Most Upvoted", "Mine"];
@@ -76,24 +86,23 @@ function NominationCard({ nomination }) {
                             )}
                         </div>
                         <h3 className="text-[15px] font-bold text-gray-900 truncate">
-                            {nomination.title}
+                            {cleanTitle(nomination.title)}
                         </h3>
                         <p className="text-[11px] text-gray-400 mt-0.5">
                             by {isOwn ? "you" : nomination.nominatorName}
                         </p>
                     </div>
 
-                    {/* upvote count + chevron */}
-                    <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="flex flex-col items-center bg-[#f0f7f0] rounded-xl px-3 py-2 border border-gray-200">
-                            <span className="text-[#2d5a27] text-sm">▲</span>
-                            <span className="text-[13px] font-bold text-[#2d5a27]">
-                                {upvoteCount}
-                            </span>
-                        </div>
-                        <span className="text-gray-400 text-xs">
-                            {isExpanded ? "▲" : "▼"}
+                    {/* upvote count + expand indicator */}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <span className="text-[12px] font-semibold text-[#344e41] whitespace-nowrap">
+                            {upvoteCount} upvotes
                         </span>
+                        <ChevronDown
+                            size={16}
+                            className="text-gray-400 transition-transform duration-200"
+                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
                     </div>
                 </div>
 

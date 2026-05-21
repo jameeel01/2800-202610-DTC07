@@ -11,6 +11,20 @@ const API_URL =
   import.meta.env.VITE_BACKEND_URL ||
   "http://localhost:5001";
 
+function cleanTitle(title) {
+  if (!title) return title;
+  // Extract postal code (Canadian format: letter-digit-letter digit-letter-digit)
+  const postalMatch = title.match(/[A-Z]\d[A-Z]\s?\d[A-Z]\d/i);
+  const postal = postalMatch ? postalMatch[0].toUpperCase() : null;
+  // Strip city and everything after
+  const local = title
+    .split(", Vancouver")[0]
+    .split(", BC")[0]
+    .split(", British Columbia")[0]
+    .split(", Canada")[0];
+  return postal ? `${local} ${postal}` : local;
+}
+
 function formatImpactSummary(upvotes) {
   const trees = calculateTreeCount(upvotes);
   const temp = calculateTempReduction(trees);
@@ -139,7 +153,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
             lineHeight: "1.3",
           }}
         >
-          {nomination.title}
+          {cleanTitle(nomination.title)}
         </p>
 
         {/* nominated by */}

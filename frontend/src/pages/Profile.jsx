@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import logo from "../assets/Shaded.png";
+
+function cleanTitle(title) {
+    if (!title) return title;
+    return title
+        .split(", Vancouver")[0]
+        .split(", BC")[0]
+        .split(", British Columbia")[0]
+        .split(", Canada")[0];
+}
 import {
     calculateTreeCount,
     calculateTempReduction,
@@ -43,19 +53,21 @@ function NominationCard({ nomination, type }) {
                             )}
                         </div>
                         <h3 className="text-[14px] font-bold text-[#1a3a1a] truncate">
-                            {nomination.title}
+                            {cleanTitle(nomination.title)}
                         </h3>
                         <p className="text-[11px] text-[#588157] mt-0.5">
                             by {nomination.nominatorName}
                         </p>
                     </div>
-                    <div className="flex flex-col items-center gap-1 shrink-0">
-                        <span className="text-[13px] font-bold text-[#344e41]">
-                            ▲ {nomination.upvoteCount}
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <span className="text-[12px] font-semibold text-[#344e41] whitespace-nowrap">
+                            {nomination.upvoteCount} upvotes
                         </span>
-                        <span className="text-gray-400 text-xs">
-                            {isExpanded ? "▲" : "▼"}
-                        </span>
+                        <ChevronDown
+                            size={16}
+                            className="text-gray-400 transition-transform duration-200"
+                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
                     </div>
                 </div>
                 <div className="flex gap-3 mt-2 text-[11px] text-[#588157] font-semibold">
