@@ -935,9 +935,9 @@ function LeafletMap({
         />
       </MapContainer>
 
-      {/* AI button — row 2 right, only show if logged in */}
+      {/* AI button — row 2 right, only show if logged in and not actively nominating */}
       {
-        user && (
+        user && !activePin && (
           <button
             onClick={handleAISuggest}
             style={{
