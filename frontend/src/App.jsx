@@ -9,6 +9,7 @@ import { useState } from "react";
 import MapPage from "./pages/MapPage";
 import NominationPage from "./pages/NominationPage";
 import NominationDetailPage from "./pages/NominationDetailPage";
+import Profile from "./pages/Profile";
 
 function App() {
   const [isPinDropMode, setIsPinDropMode] = useState(false);
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         {/* Pages that do not need the navbar */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<Home />} />
 
         {/* Pages that do need the navbar */}
         <Route
@@ -27,7 +29,6 @@ function App() {
             />
           }
         >
-          <Route path="/home" element={<Home />} />
           <Route
             path="/map"
             element={
@@ -41,6 +42,7 @@ function App() {
           <Route path="/signup" element={<AuthPage />} />
           <Route path="/nominations" element={<NominationPage />} />
           <Route path="/nomination/:id" element={<NominationDetailPage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route
             path="/nomination/:id/impact"
             element={<ImpactEstimatePage />}
