@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import mapImg from "../assets/Map.png";
+import mapImg from "../assets/Map.jpg";
 
 function Home() {
   const user = JSON.parse(localStorage.getItem("user"));
