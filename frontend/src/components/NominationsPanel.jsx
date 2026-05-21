@@ -11,13 +11,27 @@ function NominationsPanel({ onNominationSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const startY = useRef(null);
   const panelRef = useRef(null);
+  const closeBtnRef = useRef(null);
 
-  // Prevent Leaflet from intercepting clicks on the panel
+  // Use native event listeners for buttons to avoid Leaflet click propagation blocking React
   useEffect(() => {
     if (panelRef.current) {
-      L.DomEvent.disableClickPropagation(panelRef.current);
       L.DomEvent.disableScrollPropagation(panelRef.current);
+      // Stop map drag when interacting with panel (without blocking click events)
+      L.DomEvent.on(panelRef.current, "mousedown touchstart", L.DomEvent.stopPropagation);
     }
+  }, []);
+
+  // Attach close button via native listener so Leaflet doesn't block it
+  useEffect(() => {
+    const btn = closeBtnRef.current;
+    if (!btn) return;
+    const handler = (e) => {
+      e.stopPropagation();
+      setIsOpen(false);
+    };
+    btn.addEventListener("click", handler);
+    return () => btn.removeEventListener("click", handler);
   }, []);
 
   useEffect(() => {
@@ -36,22 +50,16 @@ function NominationsPanel({ onNominationSelect }) {
     if (lat && lng) {
       map.flyTo([lat, lng], 16, { animate: true, duration: 0.8 });
     }
-    if (onNominationSelect) {
-      onNominationSelect(nomination);
-    }
+    if (onNominationSelect) onNominationSelect(nomination);
     setIsOpen(false);
   };
 
-  const handleTouchStart = (e) => {
-    startY.current = e.touches[0].clientY;
-  };
-
+  const handleTouchStart = (e) => { startY.current = e.touches[0].clientY; };
   const handleTouchEnd = (e) => {
     const diff = startY.current - e.changedTouches[0].clientY;
     if (diff > 50) setIsOpen(true);
     if (diff < -50) setIsOpen(false);
   };
-
   const handleMouseDown = (e) => { startY.current = e.clientY; };
   const handleMouseUp = (e) => {
     const diff = startY.current - e.clientY;
@@ -78,27 +86,48 @@ function NominationsPanel({ onNominationSelect }) {
         transition: "transform 0.3s ease",
       }}
     >
-      {/* drag handle */}
+      {/* header — drag handle + title + close button */}
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        onClick={() => setIsOpen((prev) => !prev)}
         style={{
-          padding: "10px 0 8px",
+          padding: "10px 16px 8px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "8px",
+          gap: "6px",
           cursor: "pointer",
           flexShrink: 0,
+          position: "relative",
         }}
       >
         <div style={{ width: "36px", height: "4px", background: "#ccc", borderRadius: "2px" }} />
-        <span style={{ fontSize: "13px", fontWeight: "600", color: "#344e41" }}>
-          Nominations near you
-        </span>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <span style={{ fontSize: "13px", fontWeight: "600", color: "#344e41" }}>
+            {isOpen ? `${nominations.length} nominations near you` : "Nominations near you"}
+          </span>
+
+          {/* close button — native listener via ref */}
+          {isOpen && (
+            <button
+              ref={closeBtnRef}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "18px",
+                color: "#9ca3af",
+                cursor: "pointer",
+                lineHeight: 1,
+                padding: "0 4px",
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* list */}
@@ -128,16 +157,11 @@ function NominationsPanel({ onNominationSelect }) {
               gap: "10px",
             }}
           >
-            {/* pin icon */}
             <svg width="12" height="16" viewBox="0 0 12 16" fill="none" style={{ flexShrink: 0 }}>
-              <path
-                d="M6 0C2.686 0 0 2.686 0 6c0 4.5 6 10 6 10s6-5.5 6-10C12 2.686 9.314 0 6 0z"
-                fill="#344e41"
-              />
+              <path d="M6 0C2.686 0 0 2.686 0 6c0 4.5 6 10 6 10s6-5.5 6-10C12 2.686 9.314 0 6 0z" fill="#344e41" />
               <circle cx="6" cy="6" r="2" fill="white" />
             </svg>
 
-            {/* title truncated at city level */}
             <span style={{
               fontSize: "14px",
               fontWeight: "600",
@@ -150,12 +174,7 @@ function NominationsPanel({ onNominationSelect }) {
               {n.title.split(", Vancouver")[0].split(", BC")[0]}
             </span>
 
-            <span style={{
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "#344e41",
-              whiteSpace: "nowrap",
-            }}>
+            <span style={{ fontSize: "13px", fontWeight: "600", color: "#344e41", whiteSpace: "nowrap" }}>
               {n.upvoteCount} upvotes
             </span>
           </div>
