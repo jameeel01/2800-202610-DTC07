@@ -422,6 +422,10 @@ function LeafletMap({
   const [selectedNominationId, setSelectedNominationId] = useState(null);
   const [selectedNomination, setSelectedNomination] = useState(null);
   const [localNominations, setLocalNominations] = useState([]);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+  // button bottom position floats above the nominations panel
+  const btnBottom = isPanelOpen ? "calc(55% + 16px)" : "68px";
   const [suggestions, setSuggestions] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
@@ -672,6 +676,9 @@ function LeafletMap({
         display: "flex",
         position: "relative",
         zIndex: 0,
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
       }}
     >
       {!mapReady && <LoadingSpinner></LoadingSpinner>}
@@ -913,6 +920,7 @@ function LeafletMap({
         <NominationsPanel
           isOpen={showNominations}
           onClose={() => setShowNominations(false)}
+          onOpenChange={setIsPanelOpen}
           onNominationSelect={(nomination) => {
             setSelectedNomination(nomination);
             setSelectedNominationId(nomination._id);
@@ -935,7 +943,7 @@ function LeafletMap({
             onClick={handleAISuggest}
             style={{
               position: "absolute",
-              top: "80px",
+              bottom: btnBottom,
               right: "16px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -978,7 +986,7 @@ function LeafletMap({
             onClick={() => setShowOnlyMine((prev) => !prev)}
             style={{
               position: "absolute",
-              top: "80px",
+              bottom: btnBottom,
               left: "16px",
               zIndex: 1000,
               padding: "10px 18px",
@@ -1080,7 +1088,7 @@ function LeafletMap({
             }}
             style={{
               position: "absolute",
-              top: "134px",
+              bottom: `calc(${btnBottom} + 56px)`,
               right: "16px",
               zIndex: 1000,
               padding: "10px 18px",

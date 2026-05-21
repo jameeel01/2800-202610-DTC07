@@ -4,11 +4,15 @@ import L from "leaflet";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
-function NominationsPanel({ onNominationSelect }) {
+function NominationsPanel({ onNominationSelect, onOpenChange }) {
   const map = useMap();
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (onOpenChange) onOpenChange(isOpen);
+  }, [isOpen]);
   const panelRef = useRef(null);
   const dragHandleRef = useRef(null);
   const closeBtnRef = useRef(null);
