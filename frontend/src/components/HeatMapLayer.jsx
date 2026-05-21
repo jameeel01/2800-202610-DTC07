@@ -46,7 +46,7 @@ function HeatmapLayer() {
     <div
       style={{
         position: "absolute",
-        bottom: "24px",
+        top: "134px",
         left: "16px",
         zIndex: 1000,
       }}
