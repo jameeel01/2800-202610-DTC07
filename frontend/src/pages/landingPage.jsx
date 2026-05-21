@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import mapImg from "../assets/Map.png";
+import mapImg from "../assets/Map.jpg";
 
 function LandingPage() {
   return (
