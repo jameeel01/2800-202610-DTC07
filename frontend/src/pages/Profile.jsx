@@ -50,12 +50,9 @@ function NominationCard({ nomination, type }) {
                         </p>
                     </div>
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                        <div className="flex flex-col items-center bg-[#f0f7f0] rounded-xl px-3 py-2 border border-[#A3B18A]">
-                            <span className="text-[#2d5a27] text-sm">▲</span>
-                            <span className="text-[13px] font-bold text-[#2d5a27]">
-                                {nomination.upvoteCount}
-                            </span>
-                        </div>
+                        <span className="text-[13px] font-bold text-[#344e41]">
+                            ▲ {nomination.upvoteCount}
+                        </span>
                         <span className="text-gray-400 text-xs">
                             {isExpanded ? "▲" : "▼"}
                         </span>
@@ -72,17 +69,14 @@ function NominationCard({ nomination, type }) {
             {isExpanded && (
                 <div className="border-t border-[#A3B18A] p-4">
                     <p className="text-[13px] text-[#344E41] mb-4 leading-relaxed">
-                        {nomination.description}
+                        {nomination.description || "No description provided."}
                     </p>
                     <button
-                        onClick={() =>
-                            navigate("/map", {
-                                state: { selectedNominationId: nomination._id },
-                            })
-                        }
-                        className="w-full py-2.5 bg-[#2d5a27] text-white rounded-xl text-[13px] font-bold"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/nomination/${nomination._id}`); }}
+                        className="w-full py-2.5 bg-[#344e41] text-white text-[13px] font-bold"
+                        style={{ borderRadius: "2px" }}
                     >
-                        View on Map
+                        View Details
                     </button>
                 </div>
             )}
