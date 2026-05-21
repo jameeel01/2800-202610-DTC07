@@ -36,6 +36,32 @@ function NominationDetailPage() {
   const [nomination, setNomination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [upvoteCount, setUpvoteCount] = useState(null);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvoting, setUpvoting] = useState(false);
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // handle upvote button click
+  const handleUpvote = async () => {
+    if (!token) return;
+    setUpvoting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/nominations/${id}/upvote`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUpvoteCount(data.upvoteCount);
+        setHasUpvoted((prev) => !prev);
+      }
+    } catch (err) {
+      console.error("Upvote error:", err);
+    } finally {
+      setUpvoting(false);
+    }
+  };
 
   // fetch nomination by ID on page load
   useEffect(() => {
@@ -48,6 +74,13 @@ function NominationDetailPage() {
         }
         const data = await res.json();
         setNomination(data);
+        setUpvoteCount(data.upvoteCount);
+        // check if user already upvoted
+        setHasUpvoted(
+          Array.isArray(data.upvoterIds) && user
+            ? data.upvoterIds.map(String).includes(String(user.id))
+            : false,
+        );
       } catch (err) {
         console.error("Failed to fetch nomination:", err);
         setError("Something went wrong.");
@@ -92,13 +125,21 @@ function NominationDetailPage() {
           </span>
         </div>
 
-        {/* upvote count badge */}
-        <div className="inline-flex items-center gap-1.5 bg-[#f0f7f0] border border-[#344e41] rounded-full px-4 py-1.5 mb-6">
-          <span className="text-[#344e41] font-bold text-sm">▲</span>
-          <span className="text-[#344e41] font-bold text-sm">
-            {nomination.upvoteCount} upvotes
-          </span>
-        </div>
+        {/* upvote button for logged-in users */}
+        {token && (
+          <button
+            onClick={handleUpvote}
+            disabled={upvoting}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 mb-6 font-bold text-sm border transition-colors ${
+              hasUpvoted
+                ? "bg-[#344e41] text-white border-[#344e41]"
+                : "bg-[#f0f7f0] text-[#344e41] border-[#344e41]"
+            }`}
+          >
+            <span>▲</span>
+            <span>{upvoteCount ?? nomination.upvoteCount} upvotes</span>
+          </button>
+        )}
 
         {/* full description */}
         {/* small non-interactive map preview */}
