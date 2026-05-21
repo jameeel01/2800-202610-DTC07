@@ -141,6 +141,21 @@ function NominationDetailPage() {
           </button>
         )}
 
+        {/* log in to upvote prompt for logged-out users */}
+        {!token && (
+          <div className="inline-flex items-center gap-2 mb-6">
+            <span className="text-sm text-gray-500">
+              Log in to upvote this location.
+            </span>
+            <button
+              onClick={() => navigate("/login")}
+              className="text-sm text-[#344e41] font-semibold underline"
+            >
+              Log In
+            </button>
+          </div>
+        )}
+
         {/* full description */}
         {/* small non-interactive map preview */}
         <div className="h-48 w-full rounded-2xl overflow-hidden mb-4">
