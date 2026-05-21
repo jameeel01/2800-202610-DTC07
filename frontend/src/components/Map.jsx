@@ -958,6 +958,7 @@ function LeafletMap({
               alignItems: "center",
               justifyContent: "center",
               gap: "6px",
+              transition: "bottom 0.3s ease",
             }}
           >
             {aiLoading ? "Finding spots..." : "AI Suggest"}
@@ -984,6 +985,7 @@ function LeafletMap({
               cursor: "pointer",
               fontWeight: "bold",
               fontSize: "13px",
+              transition: "bottom 0.3s ease",
             }}
           >
             {showOnlyMine ? "Show All" : "Show Mine"}
@@ -1087,6 +1089,7 @@ function LeafletMap({
               cursor: "pointer",
               fontWeight: "bold",
               fontSize: "13px",
+              transition: "bottom 0.3s ease",
             }}
           >
             Nominate +
