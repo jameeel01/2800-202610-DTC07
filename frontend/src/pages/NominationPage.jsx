@@ -76,7 +76,7 @@ function NominationCard({ nomination }) {
                     <div className="flex-1 min-w-0 pr-3">
                         {/* badges */}
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold bg-[#2d5a27] text-white px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold bg-[#4a7c59] text-white px-2 py-0.5 rounded-full">
                                 {nomination.status || "pending"}
                             </span>
                             {isOwn && (
@@ -182,7 +182,7 @@ function NominationPage() {
     return (
         <div className="min-h-screen bg-[#f0f7f0]">
             {/* header with shaded logo — desktop only */}
-            <div className="hidden sm:flex w-full bg-[#2d5a27] px-6 py-3 justify-between items-center">
+            <div className="hidden sm:flex w-full bg-[#4a7c59] px-6 py-3 justify-between items-center">
                 <img src={logo} alt="Shaded logo" className="h-12" />
             </div>
 
@@ -203,7 +203,7 @@ function NominationPage() {
                             key={f}
                             onClick={() => setActiveFilter(f)}
                             className={`px-4 py-2 rounded-full text-[12px] font-bold whitespace-nowrap border transition-colors ${activeFilter === f
-                                ? "bg-[#2d5a27] text-white border-[#2d5a27]"
+                                ? "bg-[#4a7c59] text-white border-[#2d5a27]"
                                 : "bg-white text-[#2d5a27] border-[#2d5a27]"
                                 }`}
                         >
