@@ -30,7 +30,7 @@ function Navbar() {
   return (
     <>
       {/* desktop navbar */}
-      <nav className="hidden sm:flex fixed bottom-0 left-0 right-0 bg-[#3a5a40] border-t border-[#344e41] justify-around items-center py-3 pb-6 z-50">
+      <nav className="hidden sm:flex fixed bottom-0 left-0 right-0 bg-[#4a7c59] border-t border-[#344e41] justify-around items-center py-3 pb-6 z-50">
         {links.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to;
           return (
@@ -48,7 +48,7 @@ function Navbar() {
       </nav>
 
       {/* mobile navbar/hamburger menu */}
-      <nav className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-[#3a5a40] border-b border-[#344e41] flex items-center justify-between px-5 z-[1000]">
+      <nav className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-[#4a7c59] border-b border-[#344e41] flex items-center justify-between px-5 z-[1000]">
         <span className="text-[#a3b18a] font-bold text-lg tracking-wide">
           Shaded
         </span>
