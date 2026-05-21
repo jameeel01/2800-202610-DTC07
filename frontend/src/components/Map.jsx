@@ -46,6 +46,8 @@ function ClickHandler({ isPinDropMode, onPinPlaced, onPanelClose }) {
   useMapEvents({
     click(e) {
       if (!isPinDropMode) return;
+      // Ignore clicks that originated from a button or interactive element
+      if (e.originalEvent.target.closest("button, a, input")) return;
       onPanelClose();
       onPinPlaced(e.latlng);
     },
