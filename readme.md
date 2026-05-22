@@ -13,6 +13,8 @@ Shaded is a community-driven web app that lets Vancouver residents nominate loca
 | Frontend | https://2800-202610-dtc-07.vercel.app |
 | Backend | https://two800-202610-dtc07.onrender.com |
 
+> **Note:** The backend runs on Render's free tier and may take 30–60 seconds to wake up after a period of inactivity. If nominations or login appear slow on first load, wait a moment and try again.
+
 ---
 
 ## Test Credentials
@@ -72,14 +74,64 @@ Use these to log in and explore the app without creating an account:
 
 ---
 
+## File Structure
+
+```
+2800-202610-DTC07/
+├── backend/
+│   ├── models/
+│   │   ├── Nomination.js        # Mongoose schema for nominations
+│   │   └── User.js              # Mongoose schema for users
+│   ├── utils/
+│   │   ├── shadeCalc.js         # Vancouver tree dataset aggregation
+│   │   └── utils.js             # JWT, DB connection, helpers
+│   ├── index.js                 # Express server, all API routes
+│   └── package.json
+├── frontend/
+│   ├── public/
+│   │   ├── ShadedPin.png        # Custom map pin icon
+│   │   └── ShadedPinHighlighted.png
+│   ├── src/
+│   │   ├── assets/              # Images and SVGs
+│   │   ├── components/
+│   │   │   ├── AISuggester.jsx      # Gemini AI suggestion markers
+│   │   │   ├── BottomSheet.jsx      # Mobile nomination form
+│   │   │   ├── HeatMapLayer.jsx     # Leaflet.heat density layer
+│   │   │   ├── Map.jsx              # Main interactive map
+│   │   │   ├── Navbar.jsx           # Navigation bar
+│   │   │   ├── NominationPopup.jsx  # Pin click popup card
+│   │   │   ├── NominationsPanel.jsx # Bottom slide-up nominations list
+│   │   │   ├── OnboardingTour.jsx   # First-time user tour
+│   │   │   ├── StarRating.jsx       # Star rating display
+│   │   │   └── StatCard.jsx         # Impact stat card
+│   │   ├── pages/
+│   │   │   ├── AuthPage.jsx         # Combined login / sign up
+│   │   │   ├── Home.jsx             # Logged-in home screen
+│   │   │   ├── ImpactEstimatePage.jsx # Full impact breakdown
+│   │   │   ├── MapPage.jsx          # Map page wrapper
+│   │   │   ├── NominationDetailPage.jsx # Single nomination view
+│   │   │   ├── NominationPage.jsx   # All nominations list
+│   │   │   ├── Profile.jsx          # User profile and nominations
+│   │   │   └── landingPage.jsx      # Public landing page
+│   │   ├── utils/
+│   │   │   ├── auth.js              # Auth helper functions
+│   │   │   └── shadeCalc.js         # Impact calculation functions
+│   │   ├── App.jsx                  # Routes
+│   │   └── App.css                  # Global styles
+│   └── package.json
+└── readme.md
+```
+
+---
+
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js v18+
 - A MongoDB connection string (Atlas or local)
-- A Gemini API key (Google AI Studio — free tier works)
-- A Cloudinary account (free tier works)
+- A Gemini API key ([Google AI Studio](https://aistudio.google.com) — free tier works)
+- A Cloudinary account ([cloudinary.com](https://cloudinary.com) — free tier works)
 
 ### 1. Clone the repo
 
@@ -135,6 +187,14 @@ npm run dev
 
 The app runs at `http://localhost:5173`.
 
+### Troubleshooting
+
+- **Nominations not loading:** The Render backend may be sleeping. Wait 30–60 seconds and refresh.
+- **Map not showing:** Check that your browser allows location access, or zoom in manually to Vancouver.
+- **AI suggestions not appearing:** Confirm `GEMINI_API_KEY` is set in `backend/.env`.
+- **Photo upload failing:** Confirm all three Cloudinary env vars are set correctly in `backend/.env`.
+- **CORS errors in development:** Ensure `FRONTEND_URL=http://localhost:5173` is set in `backend/.env`.
+
 ---
 
 ## Data Sources
@@ -148,7 +208,41 @@ The app runs at `http://localhost:5173`.
   Converts map coordinates into a readable street address when a user drops a nomination pin.
 
 - **City of Vancouver Urban Forestry Strategy**
-  Referenced for temperature reduction and environmental impact methodology used in the Impact Estimate calculations.
+  Referenced for temperature reduction and CO2 absorption methodology used in impact estimate calculations.
+
+---
+
+## AI Usage
+
+| Tool | How we used it |
+|------|----------------|
+| **Google Gemini API** | Integrated into the backend (`/api/ai/suggest`). When a user clicks "AI Suggest" on the map, the frontend sends a request to our backend, which calls the Gemini API to generate a contextual nomination description based on the selected location and surrounding area. |
+| **Claude (Anthropic)** | Used during development to assist with debugging, code generation, and writing this README. Claude did not generate any user-facing content at runtime. |
+
+---
+
+## Credits and Licenses
+
+- [Leaflet](https://leafletjs.com/) — BSD 2-Clause License
+- [Leaflet.heat](https://github.com/Leaflet/Leaflet.heat) — BSD 2-Clause License
+- [React](https://react.dev/) — MIT License
+- [Tailwind CSS](https://tailwindcss.com/) — MIT License
+- [Lucide React](https://lucide.dev/) — ISC License
+- [canvas-confetti](https://github.com/catdad/canvas-confetti) — ISC License
+- Map tiles provided by [OpenStreetMap](https://www.openstreetmap.org/) contributors — ODbL License
+- Tree dataset provided by the [City of Vancouver Open Data Portal](https://opendata.vancouver.ca/)
+
+---
+
+## Contact
+
+| Member | GitHub |
+|--------|--------|
+| Carlos Movilla | [@CarlosMov](https://github.com/CarlosMov) |
+| Jericho Rosell | [@jerichorosell](https://github.com/jerichorosell) |
+| Jameel Mohammed | [@jameeel01](https://github.com/jameeel01) |
+| Cedrik Melendez | [@CedrikMelendez](https://github.com/CedrikMelendez) |
+| Kevin Wu Chen | [@KevinWuChen](https://github.com/KevinWuChen) |
 
 ---
 
