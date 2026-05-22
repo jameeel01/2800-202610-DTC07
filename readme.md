@@ -2,7 +2,7 @@
 
 **Shade Vancouver, Together.**
 
-Shaded is a community-driven web app that lets Vancouver residents nominate locations for new trees. Users drop a pin on a map, describe why the spot needs shade, and the community upvotes the most important locations — helping the City of Vancouver prioritize where to plant next.
+Shaded is a community-driven web app that lets Vancouver residents nominate locations for new trees. Drop a pin on the map, describe why the spot needs shade, and the community upvotes the most important locations — helping the City of Vancouver prioritize where to plant next.
 
 ---
 
@@ -15,38 +15,71 @@ Shaded is a community-driven web app that lets Vancouver residents nominate loca
 
 ---
 
+## Test Credentials
+
+Use these to log in and explore the app without creating an account:
+
+| Field | Value |
+|-------|-------|
+| Email | `test@shaded.app` |
+| Password | `Test1234!` |
+
+---
+
 ## Team
 
 **DTC-07**
 
-| Name |
-|------|
-| Carlos Movilla |
-| Jericho Rosell |
-| Jameel Mohammed |
-| Cedrik Melendez |
-| Kevin Wu Chen |
+| Member | Name |
+|--------|------|
+| 1 | Carlos Movilla |
+| 2 | Jericho Rosell |
+| 3 | Jameel Mohammed |
+| 4 | Cedrik Melendez |
+| 5 | Kevin Wu Chen |
+
+---
+
+## Features
+
+- **Interactive map** — browse all community nominations on a Leaflet map of Vancouver
+- **Drop a pin** — nominate any street location for a new tree
+- **Impact estimate** — each nomination shows a calculated temperature reduction, tree count, and shade area based on the City of Vancouver street-tree dataset
+- **Upvoting** — logged-in users can upvote nominations; the count drives the impact estimate
+- **Heatmap overlay** — toggle a live density layer to see where nominations are clustering
+- **AI suggestions** — Gemini generates a nomination description based on your chosen location
+- **Photo upload** — attach a photo of the location to your nomination via Cloudinary
+- **Nomination detail page** — full view of any nomination with description, photo, and impact stats
+- **My Profile** — view and manage your own nominations
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | React (Vite), Tailwind CSS, Leaflet |
+|-------|------------|
+| Frontend | React (Vite), Tailwind CSS, Leaflet / react-leaflet |
 | Backend | Node.js, Express |
-| Database | MongoDB (Mongoose) |
+| Database | MongoDB Atlas (Mongoose) |
 | Auth | JWT, bcryptjs |
-| Map data | Vancouver Open Data street-trees API |
+| AI | Google Gemini API |
+| Photo storage | Cloudinary |
+| Map data | City of Vancouver Open Data (street-trees) |
 | Geocoding | Nominatim (OpenStreetMap) |
+| Heatmap | Leaflet.heat |
+| Frontend deployment | Vercel |
+| Backend deployment | Render |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js v18+
 - A MongoDB connection string (Atlas or local)
+- A Gemini API key (Google AI Studio — free tier works)
+- A Cloudinary account (free tier works)
 
 ### 1. Clone the repo
 
@@ -68,7 +101,11 @@ Create a `.env` file inside `/backend`:
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 PORT=5001
-FRONTEND_URL=https://2800-202610-dtc-07.vercel.app
+FRONTEND_URL=http://localhost:5173
+GEMINI_API_KEY=your_gemini_api_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
 Start the backend:
@@ -104,14 +141,14 @@ The app runs at `http://localhost:5173`.
 
 - **Vancouver Open Data — Street Trees**
   `https://opendata.vancouver.ca/explore/dataset/public-trees`
-  Used to calculate average tree canopy size for the Impact Estimate page.
+  Used to calculate canopy size, shade area, and temperature reduction estimates shown on each nomination.
 
 - **Nominatim (OpenStreetMap)**
   `https://nominatim.openstreetmap.org`
-  Used to convert map coordinates into a readable street address when a user drops a nomination pin.
+  Converts map coordinates into a readable street address when a user drops a nomination pin.
 
 - **City of Vancouver Urban Forestry Strategy**
-  Referenced for temperature reduction and CO2 absorption estimates shown on the Impact Estimate page.
+  Referenced for temperature reduction and environmental impact methodology used in the Impact Estimate calculations.
 
 ---
 

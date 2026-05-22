@@ -7,21 +7,20 @@ import ImpactEstimatePage from "./pages/ImpactEstimatePage";
 import Home from "./pages/Home";
 import { useState } from "react";
 import MapPage from "./pages/MapPage";
+import NominationPage from "./pages/NominationPage";
+import NominationDetailPage from "./pages/NominationDetailPage";
+import Profile from "./pages/Profile";
 
 function App() {
   const [isPinDropMode, setIsPinDropMode] = useState(false);
   return (
     <BrowserRouter>
       <Routes>
-        {
-          // Pages that do not need the navbar
-        }
+        {/* Pages that do not need the navbar */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/home" element={<Home />} />
 
-        {
-          // Pages that do need the navbar
-        }
+        {/* Pages that do need the navbar */}
         <Route
           element={
             <MainLayout
@@ -41,6 +40,9 @@ function App() {
           />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+          <Route path="/nominations" element={<NominationPage />} />
+          <Route path="/nomination/:id" element={<NominationDetailPage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route
             path="/nomination/:id/impact"
             element={<ImpactEstimatePage />}

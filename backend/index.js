@@ -2,7 +2,20 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const cors = require("cors");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 require("dotenv").config();
+
+// configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const User = require("./models/User");
 const Nomination = require("./models/Nomination");
@@ -70,6 +83,30 @@ const cache = {
 
   invalidate() {
     this.nominations = null;
+    this.lastUpdated = null;
+  },
+};
+
+// in-memory cache for shade data
+const shadeCache = {
+  data: null,
+  lastUpdated: null,
+  ttl: 24 * 60 * 60 * 1000, // 24 hours
+
+  get() {
+    if (!this.data || Date.now() - this.lastUpdated > this.ttl) {
+      return null;
+    }
+    return this.data;
+  },
+
+  set(data) {
+    this.data = data;
+    this.lastUpdated = Date.now();
+  },
+
+  invalidate() {
+    this.data = null;
     this.lastUpdated = null;
   },
 };
@@ -202,6 +239,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl,
       category,
+      uploadedFiles,
     } = req.body;
 
     // extract user from token
@@ -274,6 +312,7 @@ app.post("/api/nominations", verifyToken, async (req, res) => {
       description,
       photoUrl: photoUrl || null,
       category,
+      uploadedFiles: uploadedFiles || [],
     });
 
     await newNomination.save();
@@ -476,6 +515,12 @@ app.get("/api/users", (req, res) => {
 // shade data from vancouver public-trees api
 app.get("/api/shade-data", async (req, res) => {
   try {
+    // try cache first
+    let shadeData = shadeCache.get();
+    if (shadeData) {
+      return res.json(shadeData);
+    }
+
     const url =
       "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-trees/records?limit=100";
     const response = await fetch(url);
@@ -487,7 +532,8 @@ app.get("/api/shade-data", async (req, res) => {
         .json({ error: "Failed to fetch tree data from Vancouver API" });
     }
 
-    const shadeData = formatShadeResponse(data.results);
+    shadeData = formatShadeResponse(data.results);
+    shadeCache.set(shadeData);
     res.json(shadeData);
   } catch (error) {
     console.error("Shade data fetch error:", error.message);
@@ -523,6 +569,238 @@ app.get("/api/impact/:upvotes", (req, res) => {
   } catch (error) {
     console.error("Impact calculation error:", error.message);
     res.status(500).json({ error: "Failed to calculate impact" });
+  }
+});
+
+// in-memory rate limiter for AI endpoint
+const aiRateLimit = new Map();
+const AI_RATE_LIMIT_MS = 0; // 10 minutes
+
+function checkAIRateLimit(userId) {
+  const now = Date.now();
+  const lastRequest = aiRateLimit.get(userId);
+
+  if (lastRequest && now - lastRequest < AI_RATE_LIMIT_MS) {
+    const waitSeconds = Math.ceil(
+      (AI_RATE_LIMIT_MS - (now - lastRequest)) / 1000,
+    );
+    const waitMinutes = Math.ceil(waitSeconds / 60);
+    return { limited: true, waitMinutes };
+  }
+
+  aiRateLimit.set(userId, now);
+  return { limited: false };
+}
+
+// Gemini backend route
+app.post("/api/ai/suggest", async (req, res) => {
+  try {
+    // rate limit check
+    const identifier = req.ip;
+    const rateCheck = checkAIRateLimit(identifier);
+    if (rateCheck.limited) {
+      return res.status(429).json({
+        error: `Please wait ${rateCheck.waitMinutes} minute(s) before requesting again.`,
+      });
+    }
+
+    // fetch real tree data from Vancouver Open Data
+    const treeRes = await fetch(
+      "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-trees/records?limit=100",
+    );
+    const treeData = await treeRes.json();
+    const trees =
+      treeData.results
+        ?.map((t) => ({
+          lat: t.geo_point_2d?.lat,
+          lng: t.geo_point_2d?.lon,
+          name: t.common_name,
+        }))
+        .filter((t) => t.lat && t.lng) || [];
+
+    // fetch existing nominations
+    const nominations = await Nomination.find()
+      .select("location title")
+      .limit(50);
+    const nominationList = nominations.map((n) => ({
+      lat: n.location.latitude,
+      lng: n.location.longitude,
+      title: n.title,
+    }));
+
+    const prompt = `
+    You are an urban shade planning assistant for Vancouver, Canada.
+
+    Here are the current street tree locations (lat/lng):
+    ${JSON.stringify(trees.slice(0, 20))}
+
+    Here are already nominated spots to avoid suggesting:
+    ${JSON.stringify(nominationList)}
+
+    Based on areas with low tree density and no existing nominations, suggest 3 specific spots in Vancouver that most need shade.
+
+    Return ONLY valid JSON with exactly 3 suggested locations. No markdown, no explanation, no extra text before or after the array.
+
+    [
+      {
+        "lat": 49.123,
+        "lng": -123.456,
+        "reason": "One sentence explaining why this spot needs shade."
+      }
+    ]
+
+    Return exactly 3 items. Nothing else.
+    `;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      },
+    );
+
+    const data = await response.json();
+    console.log("Gemini response:", JSON.stringify(data));
+
+    if (data.error) {
+      const code = data.error.code;
+      if (code === 503)
+        return res.status(503).json({ error: "AI is busy, please try again." });
+      if (code === 429)
+        return res.status(429).json({ error: "AI daily limit reached." });
+      if (code === 400)
+        return res.status(400).json({ error: "AI API key issue." });
+      return res.status(500).json({ error: "AI request failed." });
+    }
+
+    const parts = data.candidates[0].content.parts;
+    const jsonPart = parts.find((p) => !p.thought) || parts[parts.length - 1];
+    const text = jsonPart.text;
+
+    const cleaned = text.replace(/```json|```/g, "").trim();
+
+    let suggestions;
+    try {
+      suggestions = JSON.parse(cleaned);
+    } catch {
+      return res
+        .status(500)
+        .json({ error: "AI returned an unexpected response. Try again." });
+    }
+
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+      return res
+        .status(500)
+        .json({ error: "AI couldn't find suggestions. Try again." });
+    }
+
+    res.json({ suggestions });
+  } catch (error) {
+    console.error("AI suggest error:", error.message);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
+});
+
+// upload file to cloudinary
+app.post(
+  "/api/upload",
+  verifyToken,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      // validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ error: "File size must be under 5MB" });
+      }
+
+      // validate file type (images and PDF only)
+      const allowedMimes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+      ];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        return res.status(400).json({
+          error: "Only JPG, PNG, GIF, WebP, and PDF files are allowed",
+        });
+      }
+
+      // upload to cloudinary from memory buffer
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "auto",
+          folder: "dtc07-nominations",
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error.message);
+            return res.status(500).json({ error: "Failed to upload file" });
+          }
+
+          res.json({
+            message: "File uploaded successfully",
+            url: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+
+      uploadStream.end(req.file.buffer);
+    } catch (error) {
+      console.error("Upload error:", error.message);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
+  },
+);
+
+// update user name
+app.patch("/api/auth/update-name", verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: "Name is required" });
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { name: name.trim() },
+      { new: true }
+    );
+
+    res.json({ message: "Name updated", user: formatUserResponse(user) });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update name" });
+  }
+});
+
+// change password
+app.patch("/api/auth/change-password", verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ error: "All fields are required" });
+
+    const user = await User.findById(req.user.userId);
+    const match = await bcryptjs.compare(currentPassword, user.password);
+    if (!match)
+      return res.status(401).json({ error: "Current password is incorrect" });
+
+    const hashed = await bcryptjs.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to change password" });
   }
 });
 

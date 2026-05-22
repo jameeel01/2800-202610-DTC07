@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Map, LogIn, X, LogOut } from "lucide-react";
+import { Home, Map, LogIn, X, ClipboardList, User } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
@@ -11,18 +11,13 @@ function Navbar() {
   const userData = localStorage.getItem("user");
   const user = userData ? JSON.parse(userData) : null;
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/");
-    closeMenu();
-  };
-
   // show different nav if logged in
   const links = user
     ? [
       { to: "/home", label: "Home", icon: Home },
       { to: "/map", label: "Map", icon: Map },
+      { to: "/nominations", label: "Nominations", icon: ClipboardList },
+      { to: "/profile", label: "Profile", icon: User },
     ]
     : [
       { to: "/", label: "Home", icon: Home },
@@ -34,8 +29,8 @@ function Navbar() {
 
   return (
     <>
-      {/* Kevin's navbar */}
-      <nav className="hidden sm:flex fixed bottom-0 left-0 right-0 bg-[#3a5a40] border-t border-[#344e41] justify-around items-center py-3 pb-6 z-50">
+      {/* desktop navbar */}
+      <nav className="hidden sm:flex fixed bottom-0 left-0 right-0 bg-[#4a7c59] border-t border-[#344e41] justify-around items-center py-3 pb-6 z-50">
         {links.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to;
           return (
@@ -50,21 +45,10 @@ function Navbar() {
             </Link>
           );
         })}
-
-        {/* logout button for desktop */}
-        {user && (
-          <button
-            onClick={handleLogout}
-            className="flex flex-col items-center gap-1 text-xs text-gray-400 hover:text-[#a3b18a]"
-          >
-            <LogOut size={22} />
-            Logout
-          </button>
-        )}
       </nav>
 
-      {/* Ced mobile navbar/hamburger menu */}
-      <nav className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-[#3a5a40] border-b border-[#344e41] flex items-center justify-between px-5 z-[1000]">
+      {/* mobile navbar/hamburger menu */}
+      <nav className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-[#4a7c59] border-b border-[#344e41] flex items-center justify-between px-5 z-[1000]">
         <span className="text-[#a3b18a] font-bold text-lg tracking-wide">
           Shaded
         </span>
@@ -85,7 +69,7 @@ function Navbar() {
         </button>
       </nav>
 
-      {/* Backdrop (mobile only) */}
+      {/* backdrop (mobile only) */}
       <div
         onClick={closeMenu}
         className={`sm:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen
@@ -94,7 +78,7 @@ function Navbar() {
           }`}
       />
 
-      {/* Slide-in drawer (mobile only) */}
+      {/* slide-in drawer (mobile only) */}
       <div
         className={`fixed top-0 right-0 bottom-0 w-56 bg-[#344e41] border-l border-[#344e41] z-[1001] pt-16 transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"
           }`}
@@ -107,7 +91,7 @@ function Navbar() {
               to={to}
               onClick={closeMenu}
               className={`flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] transition-all duration-150 ${isActive
-                ? "text-[#a3b18a] border-[#ad7cd] bg-green-400/10"
+                ? "text-[#a3b18a] border-[#a3b18a] bg-green-400/10"
                 : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-700"
                 }`}
             >
@@ -116,17 +100,6 @@ function Navbar() {
             </Link>
           );
         })}
-
-        {/* logout button for mobile drawer */}
-        {user && (
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-4 px-6 py-4 text-sm font-medium border-l-[3px] border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700 w-full"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
-        )}
       </div>
 
       <div className="sm:hidden h-14" />

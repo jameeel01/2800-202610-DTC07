@@ -1,8 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { calculateTreeCount, calculateTempReduction, calculateShadeArea } from "../utils/shadeCalc";
+import {
+  calculateTreeCount,
+  calculateTempReduction,
+  calculateShadeArea,
+} from "../utils/shadeCalc";
 
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://localhost:5001";
+
+function cleanTitle(title) {
+  if (!title) return title;
+  // Extract postal code (Canadian format: letter-digit-letter digit-letter-digit)
+  const postalMatch = title.match(/[A-Z]\d[A-Z]\s?\d[A-Z]\d/i);
+  const postal = postalMatch ? postalMatch[0].toUpperCase() : null;
+  // Strip city and everything after
+  const local = title
+    .split(", Vancouver")[0]
+    .split(", BC")[0]
+    .split(", British Columbia")[0]
+    .split(", Canada")[0];
+  return postal ? `${local} ${postal}` : local;
+}
 
 function formatImpactSummary(upvotes) {
   const trees = calculateTreeCount(upvotes);
@@ -18,7 +39,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
   const [hasUpvoted, setHasUpvoted] = useState(
     Array.isArray(nomination.upvoterIds) && user
       ? nomination.upvoterIds.includes(user.id)
-      : false
+      : false,
   );
   const [upvoting, setUpvoting] = useState(false);
   const isOwner = user && String(nomination.nominatorId) === String(user.id);
@@ -26,9 +47,10 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
 
   if (!nomination) return null;
 
-  const descriptionExcerpt = nomination.description?.length > 80
-    ? nomination.description.slice(0, 80) + "..."
-    : nomination.description;
+  const descriptionExcerpt =
+    nomination.description?.length > 80
+      ? nomination.description.slice(0, 80) + "..."
+      : nomination.description;
 
   const handleUpvote = async () => {
     // redirect to login if not logged in
@@ -39,10 +61,13 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
 
     setUpvoting(true);
     try {
-      const res = await fetch(`${API_URL}/api/nominations/${nomination._id}/upvote`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const res = await fetch(
+        `${API_URL}/api/nominations/${nomination._id}/upvote`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
       const data = await res.json();
       if (res.ok) {
         setUpvoteCount(data.upvoteCount ?? upvoteCount + (hasUpvoted ? -1 : 1));
@@ -118,45 +143,53 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
         )}
 
         {/* title */}
-        <p style={{
-          fontSize: "15px",
-          fontWeight: "700",
-          color: "#1a3a0f",
-          margin: "0 0 4px",
-          paddingRight: "20px",
-          lineHeight: "1.3",
-        }}>
-          {nomination.title}
+        <p
+          style={{
+            fontSize: "15px",
+            fontWeight: "700",
+            color: "#1a3a0f",
+            margin: "0 0 4px",
+            paddingRight: "20px",
+            lineHeight: "1.3",
+          }}
+        >
+          {cleanTitle(nomination.title)}
         </p>
 
         {/* nominated by */}
-        <p style={{
-          fontSize: "11px",
-          color: "#9ca3af",
-          margin: "0 0 8px",
-        }}>
+        <p
+          style={{
+            fontSize: "11px",
+            color: "#9ca3af",
+            margin: "0 0 8px",
+          }}
+        >
           Nominated by {isOwner ? "you" : nomination.nominatorName}
         </p>
 
         {/* description excerpt */}
         {descriptionExcerpt && (
-          <p style={{
-            fontSize: "13px",
-            color: "#6b7280",
-            margin: "0 0 10px",
-            lineHeight: "1.5",
-          }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              margin: "0 0 10px",
+              lineHeight: "1.5",
+            }}
+          >
             {descriptionExcerpt}
           </p>
         )}
 
         {/* estimated impact */}
-        <p style={{
-          fontSize: "12px",
-          fontWeight: "600",
-          color: "#344e41",
-          margin: "0 0 14px",
-        }}>
+        <p
+          style={{
+            fontSize: "12px",
+            fontWeight: "600",
+            color: "#344e41",
+            margin: "0 0 14px",
+          }}
+        >
           Estimated impact: {formatImpactSummary(upvoteCount)}
         </p>
 
@@ -184,7 +217,7 @@ function NominationPopup({ nomination, onClose, onUpvoteSuccess }) {
           </button>
 
           <button
-            onClick={() => navigate(`/nomination/${nomination._id}/impact`)}
+            onClick={() => navigate(`/nomination/${nomination._id}`)}
             style={{
               flex: 1,
               padding: "10px",

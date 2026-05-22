@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import mapImg from "../assets/Map.png";
+import mapImg from "../assets/Map.jpg";
+import logo from "../assets/Shaded.png";
 
 function Home() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -33,6 +34,7 @@ function Home() {
 
         {/* Welcome */}
         <div className="space-y-2 text-center">
+          <img src={logo} alt="Shaded" className="h-20 mx-auto mb-2" />
           <p className="text-white/60 text-sm font-semibold uppercase tracking-widest">
             Welcome back
           </p>
@@ -52,6 +54,20 @@ function Home() {
             style={{ borderRadius: "2px" }}
           >
             View the Map
+          </Link>
+          <Link
+            to="/nominations"
+            className="block w-full bg-[#344e41] hover:bg-[#2d4438] text-white font-bold py-4 px-6 text-center text-base transition-colors border border-white/20"
+            style={{ borderRadius: "2px" }}
+          >
+            View Nominations
+          </Link>
+          <Link
+            to="/profile"
+            className="block w-full bg-[#344e41] hover:bg-[#2d4438] text-white font-bold py-4 px-6 text-center text-base transition-colors border border-white/20"
+            style={{ borderRadius: "2px" }}
+          >
+            My Profile
           </Link>
           <button
             onClick={handleLogout}
