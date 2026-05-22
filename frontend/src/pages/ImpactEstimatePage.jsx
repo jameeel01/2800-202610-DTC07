@@ -100,9 +100,9 @@ function ImpactEstimatePage() {
       {/* Back button */}
       <button
         onClick={() => navigate(`/nomination/${id}`)}
-        className="flex items-center gap-1 text-sm text-gray-500 mb-6"
+        className="flex items-center gap-1 text-sm text-[#344e41] font-medium mb-6"
       >
-        Back
+        &larr; Back to nomination
       </button>
 
       {/* Heading */}

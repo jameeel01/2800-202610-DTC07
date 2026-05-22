@@ -228,9 +228,10 @@ function NominationDetailPage() {
           {/* view impact estimate button */}
           <button
             onClick={() => navigate(`/nomination/${id}/impact`)}
-            className="mt-3 text-sm text-[#344e41] font-semibold underline"
+            className="mt-3 w-full py-2.5 bg-[#344e41] text-white text-[13px] font-bold"
+            style={{ borderRadius: "2px" }}
           >
-            See full impact breakdown →
+            View Full Impact Estimate
           </button>
         </div>
       </div>
