@@ -8,6 +8,7 @@ function HeatmapLayer({ isPanelOpen }) {
   const map = useMap();
   const [showHeatMap, setShowHeatMap] = useState(true);
   const heatLayerRef = useRef(null);
+  const pointsRef = useRef([]);
 
   useEffect(() => {
     let heat;
@@ -16,6 +17,8 @@ function HeatmapLayer({ isPanelOpen }) {
       const points = data.sampleTrees
         .filter((tree) => tree.latitude && tree.longitude)
         .map((tree) => [tree.latitude, tree.longitude, 0.5]);
+
+      pointsRef.current = points;
 
       heat = L.heatLayer(points, {
         radius: 15,
@@ -36,9 +39,11 @@ function HeatmapLayer({ isPanelOpen }) {
   const handleToggle = () => {
     if (!heatLayerRef.current) return;
     if (showHeatMap) {
-      map.removeLayer(heatLayerRef.current);
+      // clear all points — renders an empty canvas (fully hidden)
+      heatLayerRef.current.setLatLngs([]);
     } else {
-      heatLayerRef.current.addTo(map);
+      // restore the original points
+      heatLayerRef.current.setLatLngs(pointsRef.current);
     }
     setShowHeatMap((prev) => !prev);
   };
