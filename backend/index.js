@@ -116,11 +116,17 @@ const PORT = process.env.PORT || 5001;
 
 // middleware & cors - allow localhost dev & deployed Vercel frontend
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5000",
-    "https://2800-202610-dtc-07-c1pl3c22d-jameeel01s-projects.vercel.app",
-  ],
+  origin: (origin, callback) => {
+    // allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    const allowed =
+      origin === "http://localhost:5173" ||
+      origin === "http://localhost:5000" ||
+      origin === "https://2800-202610-dtc-07.vercel.app" ||
+      /^https:\/\/2800-202610-dtc-07.*\.vercel\.app$/.test(origin);
+    if (allowed) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 };
 app.use(express.json());
