@@ -7,7 +7,11 @@ import {
   calculateTreeCount,
   calculateTempReduction,
   calculateShadeArea,
+  calculateCO2,
+  calculateCommunityStars,
 } from "../utils/shadeCalc";
+import StatCard from "../components/StatCard";
+import StarRating from "../components/StarRating";
 
 const blackmarker = L.icon({
   iconUrl: "/ShadedPin.png",
@@ -192,47 +196,34 @@ function NominationDetailPage() {
           </p>
         </div>
 
-        {/* estimated impact summary */}
-        <div className="bg-white rounded-2xl p-4 mb-4">
+        {/* estimated impact */}
+        <div className="mb-4">
           <p className="text-sm font-bold text-[#344e41] mb-3">
             Estimated Impact
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              {
-                label: "Avg Temp",
-                value: `-${calculateTempReduction(calculateTreeCount(nomination.upvoteCount))}°C`,
-              },
-              {
-                label: "Trees",
-                value: `${calculateTreeCount(nomination.upvoteCount)}`,
-              },
-              {
-                label: "Shade",
-                value: `${calculateShadeArea(calculateTreeCount(nomination.upvoteCount))}m²`,
-              },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className="bg-[#f0f7f0] rounded-xl p-2 text-center"
-              >
-                <p className="text-[15px] font-bold text-[#344e41]">{value}</p>
-                <p className="text-[11px] text-gray-500">{label}</p>
-              </div>
-            ))}
+          <div className="flex flex-col gap-3">
+            <StatCard
+              value={`${calculateTempReduction(calculateTreeCount(nomination.upvoteCount))}°C`}
+              label="Temperature Reduction"
+              subtext="Within 50m radius"
+            />
+            <StatCard
+              value={`${calculateShadeArea(calculateTreeCount(nomination.upvoteCount))} m²`}
+              label="Shade Coverage"
+              subtext="During peak sun"
+            />
+            <StatCard
+              value={`${calculateCO2(calculateTreeCount(nomination.upvoteCount))} kg/yr`}
+              label="CO2 Absorption"
+              subtext="Annual carbon absorbed"
+            />
+            <StatCard label="Community Support" subtext="Based on upvotes">
+              <StarRating stars={calculateCommunityStars(nomination.upvoteCount)} />
+            </StatCard>
           </div>
-          <p className="text-[10px] text-gray-400 mt-2">
-            Based on Vancouver climate data.
+          <p className="text-[10px] text-gray-400 mt-2 text-center">
+            Source: City of Vancouver Urban Forestry Strategy
           </p>
-
-          {/* view impact estimate button */}
-          <button
-            onClick={() => navigate(`/nomination/${id}/impact`)}
-            className="mt-3 w-full py-2.5 bg-[#344e41] text-white text-[13px] font-bold"
-            style={{ borderRadius: "2px" }}
-          >
-            View Full Impact Estimate
-          </button>
         </div>
       </div>
     </div>
